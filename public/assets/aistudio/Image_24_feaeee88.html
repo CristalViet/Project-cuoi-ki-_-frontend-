@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>MINDCARE - Daily Check-in Cảm xúc</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-card": "#FFFFFF",
+            "error-container": "#ffdad6",
+            "tertiary-fixed": "#ffdcc1",
+            "background": "#e7fff2",
+            "inverse-primary": "#70dab1",
+            "border-subtle": "#DCEAE2",
+            "primary": "#00694d",
+            "on-secondary-fixed-variant": "#0a513a",
+            "on-surface-variant": "#3e4943",
+            "secondary-container": "#aff0d1",
+            "text-secondary": "#51695E",
+            "on-tertiary": "#ffffff",
+            "focus-ring": "#145740",
+            "surface-dim": "#c6e0d2",
+            "on-secondary": "#ffffff",
+            "surface-container-low": "#dffaec",
+            "secondary-fixed-dim": "#94d4b6",
+            "surface-tint": "#006c4f",
+            "tertiary": "#73563d",
+            "secondary-fixed": "#aff0d1",
+            "on-tertiary-container": "#fffbff",
+            "secondary": "#2a6951",
+            "tertiary-container": "#8e6e54",
+            "surface": "#e7fff2",
+            "primary-fixed": "#8df7cc",
+            "error": "#ba1a1a",
+            "on-error": "#ffffff",
+            "on-primary": "#ffffff",
+            "surface-container-high": "#d4eee0",
+            "on-background": "#082017",
+            "surface-bright": "#e7fff2",
+            "text-primary": "#173E30",
+            "primary-container": "#008562",
+            "inverse-on-surface": "#dcf7e9",
+            "on-error-container": "#93000a",
+            "primary-fixed-dim": "#70dab1",
+            "surface-container-highest": "#cee9db",
+            "outline-variant": "#bdcac1",
+            "surface-variant": "#cee9db",
+            "outline": "#6e7a73",
+            "inverse-surface": "#1e352c",
+            "on-secondary-fixed": "#002115",
+            "on-tertiary-fixed": "#2b1704",
+            "page-background": "#F5FBF8",
+            "on-surface": "#082017",
+            "on-secondary-container": "#316f57",
+            "on-primary-container": "#f5fff8",
+            "tertiary-fixed-dim": "#e6bfa1",
+            "on-tertiary-fixed-variant": "#5c412a",
+            "surface-container": "#d9f4e6",
+            "on-primary-fixed": "#002116",
+            "on-primary-fixed-variant": "#00513b",
+            "surface-mint": "#D7F2E5",
+            "surface-container-lowest": "#ffffff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "margin": "2rem",
+            "space-xs": "0.25rem",
+            "gutter-mobile": "1rem",
+            "gutter": "1.5rem",
+            "space-lg": "1.5rem",
+            "space-md": "1rem",
+            "margin-mobile": "1rem",
+            "space-sm": "0.5rem",
+            "space-xl": "2rem"
+          },
+          "fontFamily": {
+            "display-lg-mobile": ["Be Vietnam Pro"],
+            "display-lg": ["Be Vietnam Pro"],
+            "body-lg": ["Be Vietnam Pro"],
+            "title-sm": ["Be Vietnam Pro"],
+            "title-md": ["Be Vietnam Pro"],
+            "body-md": ["Be Vietnam Pro"],
+            "headline-md": ["Be Vietnam Pro"],
+            "caption": ["Be Vietnam Pro"],
+            "label-md": ["Be Vietnam Pro"],
+            "label-sm": ["Be Vietnam Pro"]
+          },
+          "fontSize": {
+            "display-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+            "display-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+            "title-sm": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "title-md": ["18px", { "lineHeight": "26px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+            "headline-md": ["22px", { "lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "caption": ["11px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+            "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    /* Material Icon utility */
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .material-symbols-outlined.filled {
+      font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    }
+
+    /* Hide standard scrollbars for touch scroll areas */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Custom Mobile Slider Style */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: transparent;
+    }
+    input[type=range]:focus {
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 28px;
+      width: 28px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 3px solid #145740;
+      box-shadow: 0 3px 8px rgba(20, 87, 64, 0.25);
+      cursor: pointer;
+      margin-top: -11px;
+      transition: transform 0.1s ease;
+    }
+    input[type=range]::-webkit-slider-thumb:active {
+      transform: scale(1.15);
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 8px;
+      cursor: pointer;
+      border-radius: 9999px;
+      background: linear-gradient(to right, #008562 0%, #008562 40%, #DCEAE2 40%, #DCEAE2 100%);
+    }
+
+    /* Smooth touch responsiveness */
+    .press-feedback:active {
+      transform: scale(0.97);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-[#eef5f1] text-text-primary antialiased min-h-screen flex justify-center items-start selection:bg-surface-mint selection:text-text-primary py-0 sm:py-6">
+<!-- Mobile Viewport Container (Target 390px Mobile Native Canvas) -->
+<main class="w-full max-w-[412px] bg-page-background min-h-screen sm:min-h-[844px] sm:rounded-[36px] shadow-2xl relative flex flex-col overflow-hidden border border-border-subtle/70">
+<!-- Sticky Top Header (Task Focused Modal: Close Action, No Global Shell BottomNav) -->
+<header class="sticky top-0 z-30 bg-page-background/95 backdrop-blur-md px-margin-mobile pt-4 pb-3">
+<div class="flex items-center justify-between">
+<!-- Close Button (thumb friendly 44x44px target) -->
+<button aria-label="Đóng check-in" class="w-11 h-11 flex items-center justify-center rounded-full text-text-primary hover:bg-surface-mint/60 transition-colors press-feedback" type="button">
+<span class="material-symbols-outlined text-[24px]">close</span>
+</button>
+<!-- Header Title & Date -->
+<div class="text-center flex-1 px-2">
+<h1 class="font-title-sm text-title-sm text-text-primary">Check-in cảm xúc</h1>
+<p class="font-label-sm text-label-sm text-text-secondary mt-0.5">Chủ Nhật, 18/10/2026</p>
+</div>
+<!-- Provenance/Calendar Helper -->
+<div class="w-11 h-11 flex items-center justify-center rounded-full bg-surface-mint/50 text-primary">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">spa</span>
+</div>
+</div>
+<!-- Linear Stepper / Progress Bar (Steps 1 to 5) -->
+<div class="mt-3 px-1">
+<div class="flex items-center justify-between text-caption font-caption text-text-secondary mb-1.5 font-medium">
+<span class="text-primary font-semibold">Bước 4/5: Nhận diện &amp; Trút bớt</span>
+<span>80% hoàn thành</span>
+</div>
+<div class="w-full h-1.5 bg-border-subtle rounded-full overflow-hidden flex">
+<div class="h-full bg-primary-container rounded-full w-[80%] transition-all duration-300"></div>
+</div>
+</div>
+</header>
+<!-- Scrollable Content Canvas -->
+<div class="flex-1 overflow-y-auto px-margin-mobile pt-space-xs pb-32 space-y-space-lg no-scrollbar">
+<!-- Contextual Warmth Callout -->
+<section class="bg-surface-card p-space-md rounded-2xl border border-border-subtle shadow-[0_4px_16px_-2px_rgba(20,87,64,0.04)] flex items-start space-x-3">
+<div class="w-8 h-8 rounded-full bg-surface-mint flex items-center justify-center shrink-0 text-primary mt-0.5">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</div>
+<div class="flex-1">
+<p class="font-body-md text-body-md text-text-primary leading-snug">
+            Dành 1 phút lắng lại với chính mình. Không có cảm xúc nào là sai hay phải che giấu.
+          </p>
+<span class="inline-block mt-2 px-2 py-0.5 bg-surface-mint text-primary font-label-sm text-[11px] rounded-md font-medium">
+            Dựa trên check-in tự nguyện
+          </span>
+</div>
+</section>
+<!-- BƯỚC 1: Đánh giá tâm trạng hôm nay -->
+<section class="space-y-space-sm">
+<div class="flex justify-between items-baseline px-0.5">
+<h2 class="font-title-sm text-title-sm text-text-primary flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-container inline-block"></span>
+            1. Tâm trạng hiện tại của bạn
+          </h2>
+<span class="font-label-sm text-label-sm text-primary font-semibold">Mức 6/10</span>
+</div>
+<!-- Horizontal Snap Feeling Cards (Scale 0-10, Preselected 6) -->
+<div class="relative">
+<div class="flex space-x-3 overflow-x-auto no-scrollbar py-2 px-0.5">
+<!-- Item 4: Trầm lặng -->
+<button class="shrink-0 w-28 bg-surface-card rounded-2xl p-3 border border-border-subtle text-center flex flex-col items-center justify-center transition-all press-feedback shadow-[0_2px_8px_rgba(20,87,64,0.03)] hover:border-primary/40" type="button">
+<span class="text-3xl mb-1.5 filter grayscale opacity-75">😐</span>
+<span class="font-label-sm text-label-sm text-text-secondary font-medium">4 · Hơi trầm</span>
+</button>
+<!-- Item 5: Bình thường -->
+<button class="shrink-0 w-28 bg-surface-card rounded-2xl p-3 border border-border-subtle text-center flex flex-col items-center justify-center transition-all press-feedback shadow-[0_2px_8px_rgba(20,87,64,0.03)] hover:border-primary/40" type="button">
+<span class="text-3xl mb-1.5">🙂</span>
+<span class="font-label-sm text-label-sm text-text-secondary font-medium">5 · Bình thường</span>
+</button>
+<!-- Item 6: ACTIVE SELECTED -->
+<button class="shrink-0 w-36 bg-surface-mint/60 rounded-2xl p-3.5 border-2 border-primary-container text-center flex flex-col items-center justify-center transition-all press-feedback shadow-[0_4px_16px_rgba(0,133,98,0.14)] relative" type="button">
+<span class="absolute -top-2.5 right-3 px-2 py-0.5 bg-primary-container text-white font-caption text-[10px] rounded-full font-semibold">Đang chọn</span>
+<span class="text-4xl mb-1.5 transform scale-110">🌿</span>
+<span class="font-title-sm text-label-md text-text-primary font-semibold">6 · Khá ổn</span>
+<span class="font-caption text-caption text-text-secondary">Nhẹ nhõm, bình tĩnh</span>
+</button>
+<!-- Item 7: Tươi vui -->
+<button class="shrink-0 w-28 bg-surface-card rounded-2xl p-3 border border-border-subtle text-center flex flex-col items-center justify-center transition-all press-feedback shadow-[0_2px_8px_rgba(20,87,64,0.03)] hover:border-primary/40" type="button">
+<span class="text-3xl mb-1.5">✨</span>
+<span class="font-label-sm text-label-sm text-text-secondary font-medium">7 · Nhẹ lòng</span>
+</button>
+<!-- Item 8: Năng lượng -->
+<button class="shrink-0 w-28 bg-surface-card rounded-2xl p-3 border border-border-subtle text-center flex flex-col items-center justify-center transition-all press-feedback shadow-[0_2px_8px_rgba(20,87,64,0.03)] hover:border-primary/40" type="button">
+<span class="text-3xl mb-1.5">🌟</span>
+<span class="font-label-sm text-label-sm text-text-secondary font-medium">8 · Tích cực</span>
+</button>
+</div>
+</div>
+</section>
+<!-- BƯỚC 2: Mức độ stress / áp lực -->
+<section class="bg-surface-card p-space-md rounded-2xl border border-border-subtle shadow-[0_4px_16px_-2px_rgba(20,87,64,0.04)] space-y-3">
+<div class="flex items-center justify-between">
+<h2 class="font-title-sm text-title-sm text-text-primary flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-container inline-block"></span>
+            2. Mức độ áp lực &amp; stress
+          </h2>
+<span class="px-2.5 py-1 bg-surface-mint text-primary font-label-md rounded-lg font-semibold text-xs">
+            4 / 10
+          </span>
+</div>
+<p class="font-body-md text-body-md text-text-secondary">
+<strong class="text-text-primary font-medium">Căng thẳng nhẹ</strong> — Trong tầm kiểm soát, có chút bộn bề nhưng vẫn làm chủ được nhịp điệu.
+        </p>
+<!-- Native Slider with Large Touch Thumb -->
+<div class="pt-2 pb-1">
+<input aria-label="Thanh trượt mức độ stress" class="w-full focus:outline-none" max="10" min="0" type="range" value="4"/>
+<div class="flex justify-between items-center text-caption font-caption text-text-secondary mt-2 px-1">
+<span>0 Thư thái hoàn toàn</span>
+<span class="font-semibold text-primary">4 Kiểm soát tốt</span>
+<span>10 Quá tải</span>
+</div>
+</div>
+</section>
+<!-- BƯỚC 3: Giấc ngủ đêm qua -->
+<section class="bg-surface-card p-space-md rounded-2xl border border-border-subtle shadow-[0_4px_16px_-2px_rgba(20,87,64,0.04)] space-y-space-sm">
+<div class="flex items-center justify-between">
+<h2 class="font-title-sm text-title-sm text-text-primary flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-container inline-block"></span>
+            3. Giấc ngủ đêm qua
+          </h2>
+<span class="font-caption text-caption text-text-secondary">Chu kỳ tự nhiên</span>
+</div>
+<!-- Duration Selectors -->
+<div>
+<label class="block font-label-sm text-label-sm text-text-secondary mb-2">Thời lượng giấc ngủ:</label>
+<div class="flex flex-wrap gap-2">
+<button class="px-3.5 py-2 rounded-xl bg-page-background text-text-secondary border border-border-subtle font-label-md text-sm press-feedback" type="button">
+              &lt; 5h
+            </button>
+<button class="px-3.5 py-2 rounded-xl bg-page-background text-text-secondary border border-border-subtle font-label-md text-sm press-feedback" type="button">
+              6h
+            </button>
+<button class="px-3.5 py-2 rounded-xl bg-page-background text-text-secondary border border-border-subtle font-label-md text-sm press-feedback" type="button">
+              7h
+            </button>
+<!-- Preselected 7,5 giờ -->
+<button class="px-4 py-2 rounded-xl bg-primary text-white font-label-md text-sm font-semibold shadow-[0_2px_8px_rgba(0,105,77,0.25)] border border-primary press-feedback flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px] text-secondary-container" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+              7,5 giờ
+            </button>
+<button class="px-3.5 py-2 rounded-xl bg-page-background text-text-secondary border border-border-subtle font-label-md text-sm press-feedback" type="button">
+              8h+
+            </button>
+</div>
+</div>
+<!-- Sleep Quality Pills -->
+<div class="pt-2 border-t border-border-subtle">
+<label class="block font-label-sm text-label-sm text-text-secondary mb-2">Chất lượng giấc ngủ:</label>
+<div class="grid grid-cols-3 gap-2">
+<button class="p-2.5 rounded-xl border border-border-subtle bg-page-background text-center press-feedback" type="button">
+<span class="block text-lg mb-0.5">🥱</span>
+<span class="font-label-sm text-[12px] text-text-secondary">Chập chờn</span>
+</button>
+<!-- Selected -->
+<button class="p-2.5 rounded-xl border-2 border-primary-container bg-surface-mint/70 text-center press-feedback shadow-sm" type="button">
+<span class="block text-lg mb-0.5">🌙</span>
+<span class="font-label-sm text-[12px] text-text-primary font-semibold">Ngủ ngon giấc</span>
+</button>
+<button class="p-2.5 rounded-xl border border-border-subtle bg-page-background text-center press-feedback" type="button">
+<span class="block text-lg mb-0.5">☀️</span>
+<span class="font-label-sm text-[12px] text-text-secondary">Rất sảng khoái</span>
+</button>
+</div>
+</div>
+</section>
+<!-- BƯỚC 4: Cảm xúc chủ đạo (Multi-select tags) -->
+<section class="space-y-space-sm">
+<div class="flex items-center justify-between px-0.5">
+<h2 class="font-title-sm text-title-sm text-text-primary flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-container inline-block"></span>
+            4. Những sắc thái cảm xúc nổi bật
+          </h2>
+<span class="font-caption text-caption text-text-secondary">Chạm để chọn nhiều</span>
+</div>
+<div class="flex flex-wrap gap-2 pt-1">
+<!-- Selected: Biết ơn -->
+<button class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-mint border border-primary-container text-text-primary font-label-md text-sm font-semibold shadow-xs press-feedback" type="button">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">check</span>
+            Biết ơn
+          </button>
+<!-- Selected: Tập trung -->
+<button class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-mint border border-primary-container text-text-primary font-label-md text-sm font-semibold shadow-xs press-feedback" type="button">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">check</span>
+            Tập trung
+          </button>
+<!-- Selected: Hơi lo lắng -->
+<button class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-mint border border-primary-container text-text-primary font-label-md text-sm font-semibold shadow-xs press-feedback" type="button">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">check</span>
+            Hơi lo lắng
+          </button>
+<!-- Selected: Bình yên -->
+<button class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-mint border border-primary-container text-text-primary font-label-md text-sm font-semibold shadow-xs press-feedback" type="button">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">check</span>
+            Bình yên
+          </button>
+<!-- Selected: Mệt mỏi -->
+<button class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-mint border border-primary-container text-text-primary font-label-md text-sm font-semibold shadow-xs press-feedback" type="button">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">check</span>
+            Mệt mỏi
+          </button>
+<!-- Unselected Chips -->
+<button class="px-3.5 py-2 rounded-xl bg-surface-card border border-border-subtle text-text-secondary font-label-md text-sm hover:border-primary/50 press-feedback" type="button">
+            + Hy vọng
+          </button>
+<button class="px-3.5 py-2 rounded-xl bg-surface-card border border-border-subtle text-text-secondary font-label-md text-sm hover:border-primary/50 press-feedback" type="button">
+            + Áp lực hạn chót
+          </button>
+<button class="px-3.5 py-2 rounded-xl bg-surface-card border border-border-subtle text-text-secondary font-label-md text-sm hover:border-primary/50 press-feedback" type="button">
+            + Háo hức
+          </button>
+</div>
+</section>
+<!-- BƯỚC 5: Ghi chú ngắn trút bớt cảm xúc -->
+<section class="space-y-space-sm">
+<div class="flex items-center justify-between px-0.5">
+<h2 class="font-title-sm text-title-sm text-text-primary flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-container inline-block"></span>
+            5. Không gian trút bỏ suy nghĩ
+          </h2>
+<span class="font-caption text-caption text-text-secondary">Không bắt buộc</span>
+</div>
+<div class="bg-surface-card rounded-xl p-3 border border-border-subtle focus-within:border-focus-ring focus-within:ring-2 focus-within:ring-focus-ring/10 transition-all">
+<textarea class="w-full bg-transparent border-0 p-0 text-text-primary placeholder:text-text-secondary/65 text-body-md font-body-md resize-none focus:ring-0" placeholder="Viết vài câu tự do trút bớt điều đang đọng lại trong lòng bạn..." rows="3">Hôm nay đã hoàn thành bài thuyết trình nhóm trên lớp. Dù hơi căng thẳng vào đầu giờ nhưng mọi việc đã diễn ra trôi chảy. Tối nay mình sẽ đi ngủ sớm và nghe nhạc êm dịu.</textarea>
+<div class="flex items-center justify-between pt-2 border-t border-border-subtle/50 text-caption font-caption text-text-secondary">
+<span class="flex items-center gap-1 text-[11px]">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+              Chỉ mình bạn xem được
+            </span>
+<span>158 ký tự</span>
+</div>
+</div>
+</section>
+<!-- CÀI ĐẶT CHIA SẺ & AI MINH BẠCH (Transparent Privacy Control) -->
+<section class="bg-surface-card rounded-2xl p-space-md border border-border-subtle space-y-3">
+<div class="flex items-start justify-between gap-3">
+<div class="flex items-start space-x-2.5">
+<div class="w-8 h-8 rounded-full bg-secondary-container/50 text-primary flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[18px]">smart_toy</span>
+</div>
+<div>
+<p class="font-title-sm text-sm text-text-primary font-semibold leading-tight">
+                Cá nhân hóa gợi ý bài tập
+              </p>
+<p class="font-caption text-caption text-text-secondary mt-1 leading-normal">
+                Cho phép AI MindCare sử dụng thông tin check-in này để gợi ý bài tập thư giãn phù hợp.
+              </p>
+</div>
+</div>
+<!-- Switch Toggle (Active State) -->
+<label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-12 h-6 bg-border-subtle peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<div class="pt-2 border-t border-border-subtle/60 flex items-center gap-1.5 text-text-secondary text-caption font-caption">
+<span class="material-symbols-outlined text-[14px] text-primary">verified_user</span>
+<span>Không bao giờ chia sẻ cho bên thứ ba vì mục đích quảng cáo.</span>
+</div>
+</section>
+</div>
+<!-- STICKY BOTTOM ACTIONS (Thumb-friendly Mobile Primary Action) -->
+<div class="sticky bottom-0 left-0 right-0 z-40 bg-surface-card/95 backdrop-blur-md px-margin-mobile pt-3 pb-6 border-t border-border-subtle shadow-[0_-8px_20px_rgba(20,87,64,0.06)]">
+<!-- Main Submission CTA Button (48px height, deep evergreen #145740) -->
+<button class="w-full h-12 bg-[#145740] hover:bg-[#0f4432] active:scale-[0.98] text-white font-title-sm text-sm font-semibold rounded-xl flex items-center justify-center gap-2 shadow-md transition-all press-feedback" type="button">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check</span>
+<span>Lưu check-in</span>
+</button>
+<!-- Security / Encryption Guarantee -->
+<div class="flex items-center justify-center gap-1.5 mt-2.5 text-text-secondary text-[11px] font-caption">
+<span class="material-symbols-outlined text-[13px] text-primary">lock</span>
+<span>Dữ liệu được mã hóa hai đầu &amp; bảo mật tuyệt đối</span>
+</div>
+</div>
+</main>
+</body></html>

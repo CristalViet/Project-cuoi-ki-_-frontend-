@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd MindCare--main
+exec npm install --legacy-peer-deps --no-package-lock --no-audit --no-fund

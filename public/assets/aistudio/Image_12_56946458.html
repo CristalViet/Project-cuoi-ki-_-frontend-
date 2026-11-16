@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MINDCARE - Cài đặt &amp; Quyền riêng tư</title>
+<!-- Google Fonts: Be Vietnam Pro -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-tertiary-container": "#fffbff",
+            "error-container": "#ffdad6",
+            "on-background": "#082017",
+            "secondary-container": "#aff0d1",
+            "on-secondary-fixed": "#002115",
+            "on-secondary-container": "#316f57",
+            "on-secondary": "#ffffff",
+            "background": "#e7fff2",
+            "surface-tint": "#006c4f",
+            "secondary-fixed": "#aff0d1",
+            "page-background": "#F5FBF8",
+            "text-secondary": "#51695E",
+            "inverse-primary": "#70dab1",
+            "outline": "#6e7a73",
+            "surface-container-highest": "#cee9db",
+            "on-primary-container": "#f5fff8",
+            "on-tertiary-fixed-variant": "#5c412a",
+            "secondary": "#2a6951",
+            "on-tertiary": "#ffffff",
+            "text-primary": "#173E30",
+            "on-surface-variant": "#3e4943",
+            "on-error": "#ffffff",
+            "tertiary-container": "#8e6e54",
+            "inverse-on-surface": "#dcf7e9",
+            "border-subtle": "#DCEAE2",
+            "surface-card": "#FFFFFF",
+            "inverse-surface": "#1e352c",
+            "on-error-container": "#93000a",
+            "surface-mint": "#D7F2E5",
+            "tertiary-fixed-dim": "#e6bfa1",
+            "surface-container-lowest": "#ffffff",
+            "primary": "#00694d",
+            "surface-variant": "#cee9db",
+            "on-secondary-fixed-variant": "#0a513a",
+            "surface-bright": "#e7fff2",
+            "on-primary-fixed": "#002116",
+            "primary-container": "#008562",
+            "on-surface": "#082017",
+            "on-primary-fixed-variant": "#00513b",
+            "surface": "#e7fff2",
+            "focus-ring": "#145740",
+            "secondary-fixed-dim": "#94d4b6",
+            "outline-variant": "#bdcac1",
+            "on-primary": "#ffffff",
+            "tertiary-fixed": "#ffdcc1",
+            "surface-dim": "#c6e0d2",
+            "surface-container-low": "#dffaec",
+            "primary-fixed-dim": "#70dab1",
+            "surface-container": "#d9f4e6",
+            "on-tertiary-fixed": "#2b1704",
+            "surface-container-high": "#d4eee0",
+            "error": "#ba1a1a",
+            "primary-fixed": "#8df7cc",
+            "tertiary": "#73563d"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-md": "1rem",
+            "margin-mobile": "1rem",
+            "gutter-mobile": "1rem",
+            "margin": "2rem",
+            "space-sm": "0.5rem",
+            "gutter": "1.5rem",
+            "space-xs": "0.25rem",
+            "space-xl": "2rem",
+            "space-lg": "1.5rem"
+          },
+          "fontFamily": {
+            "label-md": ["Be Vietnam Pro"],
+            "title-md": ["Be Vietnam Pro"],
+            "label-sm": ["Be Vietnam Pro"],
+            "title-sm": ["Be Vietnam Pro"],
+            "caption": ["Be Vietnam Pro"],
+            "body-lg": ["Be Vietnam Pro"],
+            "headline-md": ["Be Vietnam Pro"],
+            "display-lg-mobile": ["Be Vietnam Pro"],
+            "display-lg": ["Be Vietnam Pro"],
+            "body-md": ["Be Vietnam Pro"]
+          },
+          "fontSize": {
+            "label-md": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+            "title-md": ["18px", {"lineHeight": "26px", "fontWeight": "600"}],
+            "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+            "title-sm": ["16px", {"lineHeight": "24px", "fontWeight": "600"}],
+            "caption": ["11px", {"lineHeight": "16px", "fontWeight": "400"}],
+            "body-lg": ["16px", {"lineHeight": "26px", "fontWeight": "400"}],
+            "headline-md": ["22px", {"lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "display-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+            "display-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "body-md": ["14px", {"lineHeight": "22px", "fontWeight": "400"}]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    body {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      background-color: #F5FBF8;
+      color: #173E30;
+      -webkit-font-smoothing: antialiased;
+    }
+    /* Ambient Card Elevation */
+    .soft-card-shadow {
+      box-shadow: 0 4px 16px -2px rgba(20, 87, 64, 0.05);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-page-background min-h-screen flex justify-center text-text-primary antialiased selection:bg-surface-mint selection:text-text-primary">
+<!-- Mobile Simulator Wrapper (390px Native Viewport) -->
+<div class="w-full max-w-[390px] min-h-[844px] bg-page-background flex flex-col relative pb-28 shadow-xl">
+<!-- Top App Bar / Header -->
+<header class="sticky top-0 z-40 bg-page-background/95 backdrop-blur-md px-space-md py-space-sm h-14 flex items-center justify-between">
+<button aria-label="Quay lại" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-mint text-text-primary active:scale-95 transition-all duration-200" type="button">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<h1 class="text-title-md font-title-md font-semibold text-text-primary tracking-tight">
+        Cài đặt &amp; Quyền riêng tư
+      </h1>
+<div class="w-10 h-10 flex items-center justify-center">
+<span class="w-2.5 h-2.5 rounded-full bg-primary/20"></span>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="px-space-md pt-space-xs flex flex-col gap-space-lg">
+<!-- User Profile Preview Card -->
+<section class="bg-surface-card rounded-[18px] border border-border-subtle p-space-md soft-card-shadow relative overflow-hidden">
+<div class="absolute -right-6 -bottom-6 w-24 h-24 bg-surface-mint/50 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-center gap-space-md">
+<div class="relative">
+<img alt="Ảnh hồ sơ cá nhân Minh Nguyễn" class="w-14 h-14 rounded-full object-cover border-2 border-surface-mint shadow-sm" data-alt="A gentle portrait photograph of Minh, a young Vietnamese university student with warm eyes and a calm, genuine smile. Soft daylight streams in from a garden window, creating an uplifting and quiet atmosphere with botanical houseplants in the background. The aesthetic reflects organic minimalism with soft natural hues." src="https://lh3.googleusercontent.com/aida-public/AB6AXuADeMzPdQQKO8j3fumAKOhJLlunAEUv5m1SZi82UjJLT4BiW7tnlnF2mmuVtXo0WvV25Bulzrq5aBCJUpvhDAPv5hUMtNN8AgDJ0t_53X--TE3byGP8ge3PCEd7YBJ9DXeNzjboamykWLpVTx_NOnmwPIoS0ac07KhSwu9cbAdUoeCZPy4z4p3QW_-ryW1ptuskF7QyRGiYVUntNNzeBgtobZC3yzEzMzyqFdx2ETZxt3LFL2hN21nL"/>
+<span class="absolute bottom-0 right-0 w-4 h-4 bg-primary border-2 border-surface-card rounded-full"></span>
+</div>
+<div class="flex-1 min-w-0">
+<h2 class="text-title-sm font-title-sm text-text-primary truncate">Minh Nguyễn</h2>
+<p class="text-label-sm font-label-sm text-text-secondary truncate mt-0.5">Sinh viên năm 3 • minhn@university.edu.vn</p>
+<span class="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full bg-surface-mint text-text-primary text-caption font-caption">
+<span class="material-symbols-outlined text-[12px] text-primary" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+              Tài khoản đã bảo mật
+            </span>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm border-t border-border-subtle flex justify-end">
+<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-secondary text-primary hover:bg-surface-mint font-label-md text-label-md active:scale-95 transition-all" type="button">
+<span>Chỉnh sửa hồ sơ</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</section>
+<!-- Section 1: Quản lý quyền riêng tư & Dữ liệu AI -->
+<section class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[18px]">lock</span>
+<h3 class="text-label-md font-label-md text-text-primary uppercase tracking-wider font-semibold">Quyền riêng tư &amp; Dữ liệu AI</h3>
+</div>
+<span class="text-caption font-caption text-text-secondary bg-surface-mint px-2 py-0.5 rounded-full">Minh bạch 100%</span>
+</div>
+<div class="bg-surface-card rounded-[18px] border border-border-subtle p-space-md soft-card-shadow flex flex-col gap-space-md">
+<!-- AI Check-in Data Usage Toggle (Active) -->
+<div class="flex items-start justify-between gap-space-md">
+<div class="flex-1">
+<p class="text-body-md font-body-md font-semibold text-text-primary leading-snug">
+                Cho phép AI MindCare sử dụng dữ liệu Check-in
+              </p>
+<p class="text-label-sm font-label-sm text-text-secondary mt-1 leading-relaxed">
+                Cá nhân hóa hội thoại dựa trên mức stress tự ghi nhận. Dữ liệu mã hóa trên thiết bị của bạn.
+              </p>
+<div class="mt-2 inline-flex items-center gap-1 text-primary text-caption font-caption bg-surface-mint/80 px-2 py-0.5 rounded-lg">
+<span class="material-symbols-outlined text-[14px]">psychology</span>
+<span>Hiện tại: Bật (Đang hỗ trợ)</span>
+</div>
+</div>
+<!-- Toggle Switch (Checked) -->
+<label class="relative inline-flex items-center cursor-pointer mt-1 flex-shrink-0">
+<input aria-label="Cho phép AI MindCare sử dụng dữ liệu Check-in" checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-12 h-7 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-card after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary shadow-inner"></div>
+</label>
+</div>
+<div class="h-[1px] bg-border-subtle"></div>
+<!-- Diary Sync Context Toggle (Default: Off) -->
+<div class="flex items-start justify-between gap-space-md">
+<div class="flex-1">
+<p class="text-body-md font-body-md font-semibold text-text-primary leading-snug">
+                Đồng bộ ngữ cảnh ghi chép nhật ký
+              </p>
+<p class="text-label-sm font-label-sm text-text-secondary mt-1 leading-relaxed">
+                Cho phép AI tham chiếu các chủ đề bài viết gần đây. Tắt tính năng này để nhật ký luôn là không gian tuyệt đối riêng tư.
+              </p>
+<span class="inline-block mt-1 text-caption font-caption text-text-secondary">
+                Mặc định: Tắt
+              </span>
+</div>
+<!-- Toggle Switch (Unchecked) -->
+<label class="relative inline-flex items-center cursor-pointer mt-1 flex-shrink-0">
+<input aria-label="Đồng bộ ngữ cảnh ghi chép nhật ký" class="sr-only peer" type="checkbox"/>
+<div class="w-12 h-7 bg-outline-variant/60 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-card after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary shadow-inner"></div>
+</label>
+</div>
+<div class="h-[1px] bg-border-subtle"></div>
+<!-- Export Data Action -->
+<button class="flex items-center justify-between text-left py-1 hover:bg-surface-mint/40 -mx-1 px-1 rounded-xl transition-colors" type="button">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]">download_for_offline</span>
+<div>
+<p class="text-body-md font-body-md font-medium text-text-primary">Xuất toàn bộ dữ liệu cá nhân</p>
+<p class="text-caption font-caption text-text-secondary">Định dạng mở JSON hoặc PDF hoàn chỉnh</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-text-secondary text-[20px]">chevron_right</span>
+</button>
+<div class="h-[1px] bg-border-subtle"></div>
+<!-- Delete Account Danger Action -->
+<button class="flex items-center justify-between text-left py-1 hover:bg-error-container/40 -mx-1 px-1 rounded-xl transition-colors" type="button">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-error text-[20px]">delete_forever</span>
+<div>
+<p class="text-body-md font-body-md font-medium text-error">Yêu cầu xóa tài khoản và dữ liệu vĩnh viễn</p>
+<p class="text-caption font-caption text-error/80">Không thể phục hồi sau 14 ngày gửi yêu cầu</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-error text-[20px]">chevron_right</span>
+</button>
+</div>
+</section>
+<!-- Section 2: Thông báo & Nhắc nhở -->
+<section class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-1.5 px-1">
+<span class="material-symbols-outlined text-primary text-[18px]">notifications_active</span>
+<h3 class="text-label-md font-label-md text-text-primary uppercase tracking-wider font-semibold">Thông báo &amp; Nhắc nhở</h3>
+</div>
+<div class="bg-surface-card rounded-[18px] border border-border-subtle p-space-md soft-card-shadow flex flex-col gap-space-md">
+<!-- Daily Check-in Notification -->
+<div class="flex items-start justify-between gap-space-md">
+<div class="flex-1">
+<p class="text-body-md font-body-md font-semibold text-text-primary leading-snug">
+                Nhắc nhở check-in mỗi ngày
+              </p>
+<p class="text-label-sm font-label-sm text-text-secondary mt-1">
+                Gợi ý nhẹ nhàng dành ra 1 phút ghi nhận năng lượng.
+              </p>
+<div class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-page-background rounded-lg border border-border-subtle text-text-primary text-label-sm font-label-sm">
+<span class="material-symbols-outlined text-[16px] text-primary">schedule</span>
+<span>Thời gian: <strong>21:00</strong></span>
+<span class="text-text-secondary text-caption font-caption ml-1">Thay đổi</span>
+</div>
+</div>
+<!-- Toggle Switch (Checked) -->
+<label class="relative inline-flex items-center cursor-pointer mt-1 flex-shrink-0">
+<input aria-label="Nhắc nhở check-in mỗi ngày" checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-12 h-7 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-card after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary shadow-inner"></div>
+</label>
+</div>
+<div class="h-[1px] bg-border-subtle"></div>
+<!-- Late Night Study Wind-down Suggestions -->
+<div class="flex items-start justify-between gap-space-md">
+<div class="flex-1">
+<p class="text-body-md font-body-md font-semibold text-text-primary leading-snug">
+                Gợi ý bài tập thư giãn khi học bài khuya
+              </p>
+<p class="text-label-sm font-label-sm text-text-secondary mt-1 leading-relaxed">
+                Kỹ thuật thở 4-7-8 và giãn cơ nhẹ khi sử dụng ứng dụng sau 23:00.
+              </p>
+</div>
+<!-- Toggle Switch (Checked) -->
+<label class="relative inline-flex items-center cursor-pointer mt-1 flex-shrink-0">
+<input aria-label="Gợi ý bài tập thư giãn khi học bài khuya" checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-12 h-7 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-card after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary shadow-inner"></div>
+</label>
+</div>
+</div>
+</section>
+<!-- Section 3: Ứng dụng & Pháp lý minh bạch -->
+<section class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-1.5 px-1">
+<span class="material-symbols-outlined text-primary text-[18px]">verified</span>
+<h3 class="text-label-md font-label-md text-text-primary uppercase tracking-wider font-semibold">Ứng dụng &amp; Pháp lý minh bạch</h3>
+</div>
+<div class="bg-surface-card rounded-[18px] border border-border-subtle p-space-md soft-card-shadow flex flex-col gap-space-sm divide-y divide-border-subtle">
+<div class="flex items-center justify-between py-1.5">
+<span class="text-body-md font-body-md font-medium text-text-primary">Ngôn ngữ</span>
+<div class="flex items-center gap-1 text-label-md font-label-md text-text-secondary">
+<span>Tiếng Việt</span>
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</div>
+</div>
+<a class="flex items-center justify-between py-2 text-text-primary hover:text-primary transition-colors" href="#">
+<span class="text-body-md font-body-md font-medium">Chính sách bảo mật &amp; Quyền riêng tư</span>
+<span class="material-symbols-outlined text-[18px] text-text-secondary">open_in_new</span>
+</a>
+<div class="flex items-center justify-between py-2">
+<div>
+<p class="text-body-md font-body-md font-medium text-text-primary">Về dự án MINDCARE</p>
+<p class="text-caption font-caption text-text-secondary">Phiên bản tốt nghiệp v2.4.0</p>
+</div>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-mint text-primary text-caption font-caption font-semibold">
+              Ổn định
+            </span>
+</div>
+</div>
+<!-- Transparent Safety Statement / Legal Disclaimer -->
+<div class="mt-2 bg-surface-mint/60 border border-secondary/20 rounded-[16px] p-space-md flex gap-space-sm items-start">
+<span class="material-symbols-outlined text-primary text-[20px] mt-0.5 flex-shrink-0" style="font-variation-settings: 'FILL' 1;">spa</span>
+<p class="text-label-sm font-label-sm text-text-primary leading-relaxed">
+<strong>MINDCARE</strong> là công cụ tự chăm sóc sức khỏe tinh thần, không phải dịch vụ y tế hay chẩn đoán lâm sàng. Nếu bạn đang trong tình trạng khẩn cấp hoặc chịu khủng hoảng tâm lý nặng, vui lòng liên hệ ngay với đường dây nóng hỗ trợ tâm lý <strong>1900 636 788</strong> hoặc đến cơ sở y tế gần nhất.
+          </p>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar (Docked full-width bottom, 4 destinations from JSON) -->
+<nav aria-label="Điều hướng chính" class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-space-sm pb-space-sm pt-space-xs bg-surface-card shadow-sm">
+<!-- Destination 1: Trang chủ -->
+<a class="flex flex-col items-center justify-center text-text-secondary px-3 py-1 font-medium active:scale-95 transition-transform duration-150 hover:bg-surface-mint rounded-xl" href="#">
+<span class="material-symbols-outlined text-[24px]">home</span>
+<span class="text-label-sm font-label-sm mt-0.5">Trang chủ</span>
+</a>
+<!-- Destination 2: Nhật ký -->
+<a class="flex flex-col items-center justify-center text-text-secondary px-3 py-1 font-medium active:scale-95 transition-transform duration-150 hover:bg-surface-mint rounded-xl" href="#">
+<span class="material-symbols-outlined text-[24px]">menu_book</span>
+<span class="text-label-sm font-label-sm mt-0.5">Nhật ký</span>
+</a>
+<!-- Destination 3: MindCare AI -->
+<a class="flex flex-col items-center justify-center text-text-secondary px-3 py-1 font-medium active:scale-95 transition-transform duration-150 hover:bg-surface-mint rounded-xl" href="#">
+<span class="material-symbols-outlined text-[24px]">smart_toy</span>
+<span class="text-label-sm font-label-sm mt-0.5">MindCare AI</span>
+</a>
+<!-- Destination 4: Thống kê (Semantic Intent Mapping for Overview/Settings/Analytics) -->
+<a aria-current="page" class="flex flex-col items-center justify-center bg-surface-mint text-primary rounded-xl px-3 py-1 font-semibold active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">bar_chart</span>
+<span class="text-label-sm font-label-sm mt-0.5">Thống kê</span>
+</a>
+</nav>
+</div>
+</body></html>

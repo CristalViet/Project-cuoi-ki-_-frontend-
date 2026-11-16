@@ -1,0 +1,725 @@
+{
+  "project": "MindCare – Goc binh yen",
+  "style": "cozy 2D pixel-art emerald",
+  "colors": {
+    "primary": "#289A75",
+    "secondary": "#145740",
+    "tertiary": "#F0C9AA",
+    "neutral": "#51695E",
+    "mint": "#DCF3E7",
+    "cream": "#FFF9F2"
+  },
+  "note": "Images extracted from an AI-generated sprite atlas; transparent crops intended for prototype use. Examine and refine edges before production.",
+  "assets": [
+    {
+      "id": "mochi_idle",
+      "path": "characters/mochi_idle.png",
+      "width": 116,
+      "height": 182,
+      "type": "characters",
+      "label_vi": "Mochi đứng yên",
+      "interaction": "chat",
+      "transparent": true
+    },
+    {
+      "id": "mochi_walk",
+      "path": "characters/mochi_walk.png",
+      "width": 110,
+      "height": 184,
+      "type": "characters",
+      "label_vi": "Mochi đi bộ",
+      "interaction": "move",
+      "transparent": true
+    },
+    {
+      "id": "mochi_back",
+      "path": "characters/mochi_back.png",
+      "width": 110,
+      "height": 182,
+      "type": "characters",
+      "label_vi": "Mochi quay lưng",
+      "interaction": "move",
+      "transparent": true
+    },
+    {
+      "id": "mochi_left",
+      "path": "characters/mochi_left.png",
+      "width": 106,
+      "height": 184,
+      "type": "characters",
+      "label_vi": "Mochi nhìn trái",
+      "interaction": "move",
+      "transparent": true
+    },
+    {
+      "id": "mochi_right",
+      "path": "characters/mochi_right.png",
+      "width": 94,
+      "height": 182,
+      "type": "characters",
+      "label_vi": "Mochi nhìn phải",
+      "interaction": "move",
+      "transparent": true
+    },
+    {
+      "id": "mochi_water",
+      "path": "characters/mochi_water.png",
+      "width": 140,
+      "height": 200,
+      "type": "characters",
+      "label_vi": "Mochi tưới cây",
+      "interaction": "water",
+      "transparent": true
+    },
+    {
+      "id": "mochi_happy",
+      "path": "characters/mochi_happy.png",
+      "width": 136,
+      "height": 192,
+      "type": "characters",
+      "label_vi": "Mochi vui vẻ",
+      "interaction": "react",
+      "transparent": true
+    },
+    {
+      "id": "mochi_think",
+      "path": "characters/mochi_think.png",
+      "width": 102,
+      "height": 202,
+      "type": "characters",
+      "label_vi": "Mochi suy nghĩ",
+      "interaction": "thinking",
+      "transparent": true
+    },
+    {
+      "id": "mochi_rest",
+      "path": "characters/mochi_rest.png",
+      "width": 118,
+      "height": 192,
+      "type": "characters",
+      "label_vi": "Mochi ngồi nghỉ",
+      "interaction": "relax",
+      "transparent": true
+    },
+    {
+      "id": "mochi_house",
+      "path": "characters/mochi_house.png",
+      "width": 92,
+      "height": 202,
+      "type": "characters",
+      "label_vi": "Mochi trong nhà",
+      "interaction": "idle",
+      "transparent": true
+    },
+    {
+      "id": "pet_bunny",
+      "path": "companions/pet_bunny.png",
+      "width": 106,
+      "height": 140,
+      "type": "companions",
+      "label_vi": "Thỏ trắng đồng hành",
+      "interaction": "pet",
+      "transparent": true
+    },
+    {
+      "id": "pet_cat",
+      "path": "companions/pet_cat.png",
+      "width": 98,
+      "height": 106,
+      "type": "companions",
+      "label_vi": "Mèo vàng",
+      "interaction": "pet",
+      "transparent": true
+    },
+    {
+      "id": "pet_chick",
+      "path": "companions/pet_chick.png",
+      "width": 74,
+      "height": 112,
+      "type": "companions",
+      "label_vi": "Gà con",
+      "interaction": "pet",
+      "transparent": true
+    },
+    {
+      "id": "pet_hedgehog",
+      "path": "companions/pet_hedgehog.png",
+      "width": 100,
+      "height": 96,
+      "type": "companions",
+      "label_vi": "Nhím",
+      "interaction": "pet",
+      "transparent": true
+    },
+    {
+      "id": "plant_soil",
+      "path": "plants/plant_soil.png",
+      "width": 150,
+      "height": 216,
+      "type": "plants",
+      "label_vi": "Ô đất",
+      "interaction": "plant",
+      "transparent": true
+    },
+    {
+      "id": "plant_seed",
+      "path": "plants/plant_seed.png",
+      "width": 150,
+      "height": 216,
+      "type": "plants",
+      "label_vi": "Hạt giống",
+      "interaction": "plant",
+      "transparent": true
+    },
+    {
+      "id": "plant_sprout",
+      "path": "plants/plant_sprout.png",
+      "width": 150,
+      "height": 216,
+      "type": "plants",
+      "label_vi": "Mầm cây",
+      "interaction": "water",
+      "transparent": true
+    },
+    {
+      "id": "plant_small",
+      "path": "plants/plant_small.png",
+      "width": 150,
+      "height": 216,
+      "type": "plants",
+      "label_vi": "Cây non",
+      "interaction": "water",
+      "transparent": true
+    },
+    {
+      "id": "plant_growing",
+      "path": "plants/plant_growing.png",
+      "width": 150,
+      "height": 216,
+      "type": "plants",
+      "label_vi": "Cây trưởng thành",
+      "interaction": "care",
+      "transparent": true
+    },
+    {
+      "id": "plant_flower",
+      "path": "plants/plant_flower.png",
+      "width": 150,
+      "height": 216,
+      "type": "plants",
+      "label_vi": "Hoa nở",
+      "interaction": "care",
+      "transparent": true
+    },
+    {
+      "id": "plant_harvest",
+      "path": "plants/plant_harvest.png",
+      "width": 150,
+      "height": 216,
+      "type": "plants",
+      "label_vi": "Cây ra quả",
+      "interaction": "harvest",
+      "transparent": true
+    },
+    {
+      "id": "crop_tomato",
+      "path": "plants/crop_tomato.png",
+      "width": 58,
+      "height": 80,
+      "type": "plants",
+      "label_vi": "Cà chua",
+      "interaction": "harvest",
+      "transparent": true
+    },
+    {
+      "id": "crop_strawberry",
+      "path": "plants/crop_strawberry.png",
+      "width": 52,
+      "height": 76,
+      "type": "plants",
+      "label_vi": "Dâu tây",
+      "interaction": "harvest",
+      "transparent": true
+    },
+    {
+      "id": "crop_carrot",
+      "path": "plants/crop_carrot.png",
+      "width": 42,
+      "height": 78,
+      "type": "plants",
+      "label_vi": "Cà rốt",
+      "interaction": "harvest",
+      "transparent": true
+    },
+    {
+      "id": "crop_lettuce",
+      "path": "plants/crop_lettuce.png",
+      "width": 56,
+      "height": 62,
+      "type": "plants",
+      "label_vi": "Rau xà lách",
+      "interaction": "harvest",
+      "transparent": true
+    },
+    {
+      "id": "flower_sunflower",
+      "path": "plants/flower_sunflower.png",
+      "width": 58,
+      "height": 96,
+      "type": "plants",
+      "label_vi": "Hoa hướng dương",
+      "interaction": "care",
+      "transparent": true
+    },
+    {
+      "id": "flower_hydrangea",
+      "path": "plants/flower_hydrangea.png",
+      "width": 70,
+      "height": 82,
+      "type": "plants",
+      "label_vi": "Cẩm tú cầu",
+      "interaction": "care",
+      "transparent": true
+    },
+    {
+      "id": "flower_lavender",
+      "path": "plants/flower_lavender.png",
+      "width": 62,
+      "height": 92,
+      "type": "plants",
+      "label_vi": "Hoa oải hương",
+      "interaction": "care",
+      "transparent": true
+    },
+    {
+      "id": "plant_pot",
+      "path": "plants/plant_pot.png",
+      "width": 48,
+      "height": 92,
+      "type": "plants",
+      "label_vi": "Chậu cây",
+      "interaction": "care",
+      "transparent": true
+    },
+    {
+      "id": "outdoor_shrub",
+      "path": "outdoor/outdoor_shrub.png",
+      "width": 70,
+      "height": 100,
+      "type": "outdoor",
+      "label_vi": "Bụi cây",
+      "interaction": "decorate",
+      "transparent": true
+    },
+    {
+      "id": "outdoor_bench",
+      "path": "outdoor/outdoor_bench.png",
+      "width": 94,
+      "height": 100,
+      "type": "outdoor",
+      "label_vi": "Ghế băng",
+      "interaction": "sit",
+      "transparent": true
+    },
+    {
+      "id": "outdoor_chair",
+      "path": "outdoor/outdoor_chair.png",
+      "width": 88,
+      "height": 128,
+      "type": "outdoor",
+      "label_vi": "Ghế nghỉ",
+      "interaction": "sit",
+      "transparent": true
+    },
+    {
+      "id": "outdoor_sign",
+      "path": "outdoor/outdoor_sign.png",
+      "width": 72,
+      "height": 114,
+      "type": "outdoor",
+      "label_vi": "Biển chỉ dẫn",
+      "interaction": "read",
+      "transparent": true
+    },
+    {
+      "id": "outdoor_lantern",
+      "path": "outdoor/outdoor_lantern.png",
+      "width": 36,
+      "height": 158,
+      "type": "outdoor",
+      "label_vi": "Đèn ngoài trời",
+      "interaction": "toggle",
+      "transparent": true
+    },
+    {
+      "id": "outdoor_box",
+      "path": "outdoor/outdoor_box.png",
+      "width": 80,
+      "height": 96,
+      "type": "outdoor",
+      "label_vi": "Thùng gỗ",
+      "interaction": "decorate",
+      "transparent": true
+    },
+    {
+      "id": "outdoor_barrel",
+      "path": "outdoor/outdoor_barrel.png",
+      "width": 66,
+      "height": 94,
+      "type": "outdoor",
+      "label_vi": "Thùng tròn",
+      "interaction": "decorate",
+      "transparent": true
+    },
+    {
+      "id": "outdoor_flowers",
+      "path": "outdoor/outdoor_flowers.png",
+      "width": 60,
+      "height": 72,
+      "type": "outdoor",
+      "label_vi": "Chậu hoa",
+      "interaction": "decorate",
+      "transparent": true
+    },
+    {
+      "id": "outdoor_arch",
+      "path": "outdoor/outdoor_arch.png",
+      "width": 160,
+      "height": 178,
+      "type": "outdoor",
+      "label_vi": "Cổng hoa",
+      "interaction": "move",
+      "transparent": true
+    },
+    {
+      "id": "outdoor_well",
+      "path": "outdoor/outdoor_well.png",
+      "width": 90,
+      "height": 142,
+      "type": "outdoor",
+      "label_vi": "Giếng nước",
+      "interaction": "interact",
+      "transparent": true
+    },
+    {
+      "id": "tree_small",
+      "path": "outdoor/tree_small.png",
+      "width": 82,
+      "height": 132,
+      "type": "outdoor",
+      "label_vi": "Cây nhỏ",
+      "interaction": "decorate",
+      "transparent": true
+    },
+    {
+      "id": "tree_medium",
+      "path": "outdoor/tree_medium.png",
+      "width": 102,
+      "height": 84,
+      "type": "outdoor",
+      "label_vi": "Cây vừa",
+      "interaction": "decorate",
+      "transparent": true
+    },
+    {
+      "id": "tree_big",
+      "path": "outdoor/tree_big.png",
+      "width": 130,
+      "height": 170,
+      "type": "outdoor",
+      "label_vi": "Cây lớn",
+      "interaction": "decorate",
+      "transparent": true
+    },
+    {
+      "id": "rock",
+      "path": "outdoor/rock.png",
+      "width": 92,
+      "height": 58,
+      "type": "outdoor",
+      "label_vi": "Tảng đá",
+      "interaction": "decorate",
+      "transparent": true
+    },
+    {
+      "id": "flower_bush",
+      "path": "outdoor/flower_bush.png",
+      "width": 82,
+      "height": 68,
+      "type": "outdoor",
+      "label_vi": "Bụi hoa",
+      "interaction": "decorate",
+      "transparent": true
+    },
+    {
+      "id": "fence_horizontal",
+      "path": "outdoor/fence_horizontal.png",
+      "width": 104,
+      "height": 52,
+      "type": "outdoor",
+      "label_vi": "Hàng rào",
+      "interaction": "decorate",
+      "transparent": true
+    },
+    {
+      "id": "fence_corner",
+      "path": "outdoor/fence_corner.png",
+      "width": 86,
+      "height": 48,
+      "type": "outdoor",
+      "label_vi": "Góc hàng rào",
+      "interaction": "decorate",
+      "transparent": true
+    },
+    {
+      "id": "indoor_bed",
+      "path": "indoor/indoor_bed.png",
+      "width": 130,
+      "height": 112,
+      "type": "indoor",
+      "label_vi": "Giường",
+      "interaction": "rest",
+      "transparent": true
+    },
+    {
+      "id": "indoor_sofa",
+      "path": "indoor/indoor_sofa.png",
+      "width": 134,
+      "height": 106,
+      "type": "indoor",
+      "label_vi": "Sofa",
+      "interaction": "rest",
+      "transparent": true
+    },
+    {
+      "id": "indoor_rug",
+      "path": "indoor/indoor_rug.png",
+      "width": 110,
+      "height": 106,
+      "type": "indoor",
+      "label_vi": "Thảm trải",
+      "interaction": "decorate",
+      "transparent": true
+    },
+    {
+      "id": "indoor_bookshelf",
+      "path": "indoor/indoor_bookshelf.png",
+      "width": 72,
+      "height": 122,
+      "type": "indoor",
+      "label_vi": "Giá sách",
+      "interaction": "read",
+      "transparent": true
+    },
+    {
+      "id": "indoor_table",
+      "path": "indoor/indoor_table.png",
+      "width": 102,
+      "height": 80,
+      "type": "indoor",
+      "label_vi": "Bàn nhỏ",
+      "interaction": "interact",
+      "transparent": true
+    },
+    {
+      "id": "indoor_desk",
+      "path": "indoor/indoor_desk.png",
+      "width": 98,
+      "height": 158,
+      "type": "indoor",
+      "label_vi": "Bàn làm việc",
+      "interaction": "journal",
+      "transparent": true
+    },
+    {
+      "id": "indoor_lamp",
+      "path": "indoor/indoor_lamp.png",
+      "width": 54,
+      "height": 92,
+      "type": "indoor",
+      "label_vi": "Đèn bàn",
+      "interaction": "toggle",
+      "transparent": true
+    },
+    {
+      "id": "item_watering_can",
+      "path": "items/item_watering_can.png",
+      "width": 84,
+      "height": 82,
+      "type": "items",
+      "label_vi": "Bình tưới",
+      "interaction": "water",
+      "transparent": true
+    },
+    {
+      "id": "item_fertilizer",
+      "path": "items/item_fertilizer.png",
+      "width": 72,
+      "height": 84,
+      "type": "items",
+      "label_vi": "Phân bón",
+      "interaction": "fertilize",
+      "transparent": true
+    },
+    {
+      "id": "item_shovel",
+      "path": "items/item_shovel.png",
+      "width": 66,
+      "height": 96,
+      "type": "items",
+      "label_vi": "Xẻng",
+      "interaction": "dig",
+      "transparent": true
+    },
+    {
+      "id": "item_scissors",
+      "path": "items/item_scissors.png",
+      "width": 74,
+      "height": 92,
+      "type": "items",
+      "label_vi": "Kéo",
+      "interaction": "trim",
+      "transparent": true
+    },
+    {
+      "id": "item_basket",
+      "path": "items/item_basket.png",
+      "width": 104,
+      "height": 116,
+      "type": "items",
+      "label_vi": "Giỏ thu hoạch",
+      "interaction": "harvest",
+      "transparent": true
+    },
+    {
+      "id": "item_gift",
+      "path": "items/item_gift.png",
+      "width": 78,
+      "height": 112,
+      "type": "items",
+      "label_vi": "Quà nhỏ",
+      "interaction": "collect",
+      "transparent": true
+    },
+    {
+      "id": "grass_01",
+      "path": "tiles/grass_01.png",
+      "width": 64,
+      "height": 64,
+      "type": "tiles",
+      "label_vi": "grass_01",
+      "interaction": null,
+      "transparent": false
+    },
+    {
+      "id": "grass_02",
+      "path": "tiles/grass_02.png",
+      "width": 64,
+      "height": 64,
+      "type": "tiles",
+      "label_vi": "grass_02",
+      "interaction": null,
+      "transparent": false
+    },
+    {
+      "id": "grass_03",
+      "path": "tiles/grass_03.png",
+      "width": 64,
+      "height": 64,
+      "type": "tiles",
+      "label_vi": "grass_03",
+      "interaction": null,
+      "transparent": false
+    },
+    {
+      "id": "stone_path",
+      "path": "tiles/stone_path.png",
+      "width": 64,
+      "height": 64,
+      "type": "tiles",
+      "label_vi": "stone_path",
+      "interaction": null,
+      "transparent": false
+    },
+    {
+      "id": "dirt_path",
+      "path": "tiles/dirt_path.png",
+      "width": 64,
+      "height": 64,
+      "type": "tiles",
+      "label_vi": "dirt_path",
+      "interaction": null,
+      "transparent": false
+    },
+    {
+      "id": "water_01",
+      "path": "tiles/water_01.png",
+      "width": 64,
+      "height": 64,
+      "type": "tiles",
+      "label_vi": "water_01",
+      "interaction": null,
+      "transparent": false
+    },
+    {
+      "id": "water_02",
+      "path": "tiles/water_02.png",
+      "width": 64,
+      "height": 64,
+      "type": "tiles",
+      "label_vi": "water_02",
+      "interaction": null,
+      "transparent": false
+    },
+    {
+      "id": "wood_bridge",
+      "path": "tiles/wood_bridge.png",
+      "width": 64,
+      "height": 64,
+      "type": "tiles",
+      "label_vi": "wood_bridge",
+      "interaction": null,
+      "transparent": false
+    },
+    {
+      "id": "garden_tilemap_base",
+      "path": "backgrounds/garden_tilemap_base_480x840.png",
+      "width": 480,
+      "height": 840,
+      "type": "background",
+      "label_vi": "Nền pixel art sạch để đặt sprite",
+      "interaction": null,
+      "transparent": false
+    },
+    {
+      "id": "house_cottage",
+      "path": "outdoor/house_cottage.png",
+      "width": 546,
+      "height": 546,
+      "type": "outdoor",
+      "label_vi": "Căn nhà 2D tách nền",
+      "interaction": "enter_house",
+      "transparent": true
+    },
+    {
+      "id": "pond",
+      "path": "outdoor/pond.png",
+      "width": 474,
+      "height": 336,
+      "type": "outdoor",
+      "label_vi": "Hồ nhỏ thư giãn tách nền",
+      "interaction": "relax",
+      "transparent": true
+    },
+    {
+      "id": "indoor_room_base",
+      "path": "backgrounds/indoor_room_base_480x840.png",
+      "width": 480,
+      "height": 840,
+      "type": "background",
+      "label_vi": "Nền phòng trong nhà trống",
+      "interaction": null,
+      "transparent": false
+    }
+  ]
+}

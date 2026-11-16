@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MINDCARE - Chăm sóc bản thân</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100..900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-tertiary-container": "#fffbff",
+            "error-container": "#ffdad6",
+            "on-background": "#082017",
+            "secondary-container": "#aff0d1",
+            "on-secondary-fixed": "#002115",
+            "on-secondary-container": "#316f57",
+            "on-secondary": "#ffffff",
+            "background": "#e7fff2",
+            "surface-tint": "#006c4f",
+            "secondary-fixed": "#aff0d1",
+            "page-background": "#F5FBF8",
+            "text-secondary": "#51695E",
+            "inverse-primary": "#70dab1",
+            "outline": "#6e7a73",
+            "surface-container-highest": "#cee9db",
+            "on-primary-container": "#f5fff8",
+            "on-tertiary-fixed-variant": "#5c412a",
+            "secondary": "#2a6951",
+            "on-tertiary": "#ffffff",
+            "text-primary": "#173E30",
+            "on-surface-variant": "#3e4943",
+            "on-error": "#ffffff",
+            "tertiary-container": "#8e6e54",
+            "inverse-on-surface": "#dcf7e9",
+            "border-subtle": "#DCEAE2",
+            "surface-card": "#FFFFFF",
+            "inverse-surface": "#1e352c",
+            "on-error-container": "#93000a",
+            "surface-mint": "#D7F2E5",
+            "tertiary-fixed-dim": "#e6bfa1",
+            "surface-container-lowest": "#ffffff",
+            "primary": "#00694d",
+            "surface-variant": "#cee9db",
+            "on-secondary-fixed-variant": "#0a513a",
+            "surface-bright": "#e7fff2",
+            "on-primary-fixed": "#002116",
+            "primary-container": "#008562",
+            "on-surface": "#082017",
+            "on-primary-fixed-variant": "#00513b",
+            "surface": "#e7fff2",
+            "focus-ring": "#145740",
+            "secondary-fixed-dim": "#94d4b6",
+            "outline-variant": "#bdcac1",
+            "on-primary": "#ffffff",
+            "tertiary-fixed": "#ffdcc1",
+            "surface-dim": "#c6e0d2",
+            "surface-container-low": "#dffaec",
+            "primary-fixed-dim": "#70dab1",
+            "surface-container": "#d9f4e6",
+            "on-tertiary-fixed": "#2b1704",
+            "surface-container-high": "#d4eee0",
+            "error": "#ba1a1a",
+            "primary-fixed": "#8df7cc",
+            "tertiary": "#73563d"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-md": "1rem",
+            "margin-mobile": "1rem",
+            "gutter-mobile": "1rem",
+            "margin": "2rem",
+            "space-sm": "0.5rem",
+            "gutter": "1.5rem",
+            "space-xs": "0.25rem",
+            "space-xl": "2rem",
+            "space-lg": "1.5rem"
+          },
+          "fontFamily": {
+            "label-md": ["Be Vietnam Pro"],
+            "title-md": ["Be Vietnam Pro"],
+            "label-sm": ["Be Vietnam Pro"],
+            "title-sm": ["Be Vietnam Pro"],
+            "caption": ["Be Vietnam Pro"],
+            "body-lg": ["Be Vietnam Pro"],
+            "headline-md": ["Be Vietnam Pro"],
+            "display-lg-mobile": ["Be Vietnam Pro"],
+            "display-lg": ["Be Vietnam Pro"],
+            "body-md": ["Be Vietnam Pro"]
+          },
+          "fontSize": {
+            "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+            "title-md": ["18px", { "lineHeight": "26px", "fontWeight": "600" }],
+            "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+            "title-sm": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "caption": ["11px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+            "headline-md": ["22px", { "lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "display-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+            "display-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .custom-scroll-hide::-webkit-scrollbar {
+      display: none;
+    }
+    .custom-scroll-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-page-background text-text-primary antialiased min-h-screen flex justify-center selection:bg-surface-mint selection:text-primary">
+<!-- Mobile Frame Container (390px simulated or responsive on small viewport) -->
+<div class="w-full max-w-[390px] min-h-screen bg-page-background flex flex-col relative pb-28 shadow-xl">
+<!-- Top App Bar / Sub-Navigation Shell -->
+<header class="sticky top-0 z-40 bg-page-background/95 backdrop-blur-md px-margin-mobile pt-3 pb-2 transition-all">
+<div class="flex items-center justify-between h-12">
+<button aria-label="Quay lại" class="w-10 h-10 rounded-xl flex items-center justify-center text-text-primary hover:bg-surface-mint active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<span class="text-title-md font-title-md font-bold tracking-tight text-primary">MINDCARE</span>
+<button aria-label="Lưu trữ & Yêu thích" class="w-10 h-10 rounded-xl flex items-center justify-center text-text-secondary hover:bg-surface-mint active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined" data-icon="bookmark">bookmark</span>
+</button>
+</div>
+<!-- Title & Subtitle Header -->
+<div class="pt-2 pb-1">
+<h1 class="text-display-lg-mobile font-display-lg-mobile text-text-primary">Chăm sóc bản thân</h1>
+<p class="text-body-md font-body-md text-text-secondary mt-0.5">Các bài tập thực hành vi mô giúp xoa dịu tâm trí</p>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="px-margin-mobile flex flex-col gap-space-lg pt-1">
+<!-- Disclaimer Banner (Gentle, supportive, non-clinical) -->
+<section class="bg-surface-container-low rounded-2xl p-space-md border border-border-subtle flex items-start gap-space-sm relative overflow-hidden">
+<div class="w-7 h-7 rounded-full bg-surface-mint flex items-center justify-center text-primary shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[18px]" data-icon="spa" data-weight="fill" style="font-variation-settings: 'FILL' 1;">spa</span>
+</div>
+<div class="flex-1 pr-1">
+<p class="text-caption font-caption text-text-secondary leading-relaxed">
+            Nội dung hướng dẫn tự chăm sóc và điều hòa cảm xúc, không thay thế trị liệu tâm lý chuyên sâu.
+          </p>
+</div>
+</section>
+<!-- Category Filter Tabs (Horizontal Scroll) -->
+<section class="-mx-margin-mobile px-margin-mobile overflow-x-auto custom-scroll-hide">
+<div aria-label="Chuyên mục thực hành" class="flex items-center gap-space-xs py-1" role="tablist">
+<button aria-selected="true" class="bg-primary text-on-primary text-label-md font-label-md px-4 py-2 rounded-xl whitespace-nowrap shadow-sm hover:opacity-95 active:scale-95 transition-all" role="tab">
+            Tất cả
+          </button>
+<button aria-selected="false" class="bg-surface-card border border-border-subtle text-text-secondary text-label-md font-label-md px-4 py-2 rounded-xl whitespace-nowrap hover:bg-surface-mint hover:text-primary active:scale-95 transition-all" role="tab">
+            Thở & Thư giãn
+          </button>
+<button aria-selected="false" class="bg-surface-card border border-border-subtle text-text-secondary text-label-md font-label-md px-4 py-2 rounded-xl whitespace-nowrap hover:bg-surface-mint hover:text-primary active:scale-95 transition-all" role="tab">
+            Tâm trí
+          </button>
+<button aria-selected="false" class="bg-surface-card border border-border-subtle text-text-secondary text-label-md font-label-md px-4 py-2 rounded-xl whitespace-nowrap hover:bg-surface-mint hover:text-primary active:scale-95 transition-all" role="tab">
+            Giấc ngủ
+          </button>
+</div>
+</section>
+<!-- Featured / Priority Exercise Card (Bento Focus) -->
+<section class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-text-secondary">Bài tập nổi bật</span>
+<span class="inline-flex items-center gap-1 text-label-sm font-label-sm text-primary font-semibold">
+<span class="material-symbols-outlined text-[16px]" data-icon="bolt">bolt</span> Vi mô 2 phút
+          </span>
+</div>
+<!-- Exercise Card 1: Hít thở 4-7-8 -->
+<article class="bg-surface-card rounded-[18px] p-space-md border border-border-subtle shadow-[0_4px_16px_-2px_rgba(20,87,64,0.05)] relative overflow-hidden flex flex-col gap-space-md">
+<!-- Background botanical flourish accent -->
+<div class="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-surface-mint/60 pointer-events-none blur-xl"></div>
+<div class="flex items-start justify-between relative z-10">
+<div class="flex items-center gap- space-sm">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-caption font-caption font-semibold bg-surface-mint text-primary">
+<span class="material-symbols-outlined text-[14px]" data-icon="air">air</span> Thở điều hòa
+              </span>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-caption font-caption text-text-secondary bg-page-background">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span> 2 phút
+              </span>
+</div>
+<!-- Soothing leaf/breath illustration badge -->
+<div class="w-10 h-10 rounded-2xl bg-surface-mint/80 flex items-center justify-center text-primary shadow-xs">
+<span class="material-symbols-outlined text-[22px]" data-icon="energy_savings_leaf" data-weight="fill" style="font-variation-settings: 'FILL' 1;">energy_savings_leaf</span>
+</div>
+</div>
+<div class="relative z-10">
+<h2 class="text-title-md font-title-md text-text-primary">Hít thở 4-7-8</h2>
+<p class="text-body-md font-body-md text-text-secondary mt-1">Điều hòa nhịp tim, giảm căng thẳng tức thì</p>
+</div>
+<div class="flex items-center justify-between pt-1 relative z-10">
+<div class="flex items-center -space-x-1">
+<span class="w-2 h-2 rounded-full bg-primary inline-block"></span>
+<span class="text-caption font-caption text-text-secondary ml-2">Phổ biến cho giờ giải lao</span>
+</div>
+<button class="bg-primary text-on-primary text-label-md font-label-md px-5 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm hover:bg-primary-container active:scale-95 transition-all" type="button">
+<span>Bắt đầu ngay</span>
+<span class="material-symbols-outlined text-[16px]" data-icon="play_arrow">play_arrow</span>
+</button>
+</div>
+</article>
+</section>
+<!-- Exercise List Section -->
+<section class="flex flex-col gap-space-sm">
+<h2 class="text-title-sm font-title-sm text-text-primary">Các bài thực hành khác</h2>
+<div class="flex flex-col gap-space-sm">
+<!-- Exercise Card 2: Thư giãn cơ bắp tiến triển -->
+<article class="bg-surface-card rounded-[18px] p-space-md border border-border-subtle shadow-[0_4px_16px_-2px_rgba(20,87,64,0.05)] flex items-start gap-space-md hover:border-secondary transition-all">
+<div class="w-12 h-12 rounded-2xl bg-secondary-container/40 flex items-center justify-center text-secondary shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[24px]" data-icon="accessibility_new">accessibility_new</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-space-xs mb-1">
+<span class="text-caption font-caption text-secondary font-semibold bg-surface-mint px-2 py-0.5 rounded-md">Cơ thể</span>
+<span class="text-caption font-caption text-text-secondary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px]" data-icon="schedule">schedule</span> 5 phút
+                </span>
+</div>
+<h3 class="text-title-sm font-title-sm text-text-primary truncate">Thư giãn cơ bắp tiến triển</h3>
+<p class="text-body-md font-body-md text-text-secondary mt-0.5 text-xs line-clamp-2">Giải phóng căng cứng ở vai, cổ và lưng sau giờ học.</p>
+</div>
+<button aria-label="Mở bài tập" class="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:text-primary hover:bg-surface-mint transition-colors self-center" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="chevron_right">chevron_right</span>
+</button>
+</article>
+<!-- Exercise Card 3: Viết 3 điều tích cực -->
+<article class="bg-surface-card rounded-[18px] p-space-md border border-border-subtle shadow-[0_4px_16px_-2px_rgba(20,87,64,0.05)] flex items-start gap-space-md hover:border-secondary transition-all">
+<div class="w-12 h-12 rounded-2xl bg-tertiary-fixed/40 flex items-center justify-center text-tertiary shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[24px]" data-icon="edit_note">edit_note</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-space-xs mb-1">
+<span class="text-caption font-caption text-tertiary font-semibold bg-tertiary-fixed/30 px-2 py-0.5 rounded-md">Tâm trí</span>
+<span class="text-caption font-caption text-text-secondary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px]" data-icon="schedule">schedule</span> 3 phút
+                </span>
+</div>
+<h3 class="text-title-sm font-title-sm text-text-primary truncate">Viết 3 điều tích cực</h3>
+<p class="text-body-md font-body-md text-text-secondary mt-0.5 text-xs line-clamp-2">Tái định hình góc nhìn và nuôi dưỡng lòng biết ơn.</p>
+</div>
+<button aria-label="Mở bài tập" class="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:text-primary hover:bg-surface-mint transition-colors self-center" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="chevron_right">chevron_right</span>
+</button>
+</article>
+<!-- Exercise Card 4: Nghỉ ngơi ngắn & Thả lỏng mắt -->
+<article class="bg-surface-card rounded-[18px] p-space-md border border-border-subtle shadow-[0_4px_16px_-2px_rgba(20,87,64,0.05)] flex items-start gap-space-md hover:border-secondary transition-all">
+<div class="w-12 h-12 rounded-2xl bg-surface-mint flex items-center justify-center text-primary shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[24px]" data-icon="visibility">visibility</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-space-xs mb-1">
+<span class="text-caption font-caption text-primary font-semibold bg-surface-mint px-2 py-0.5 rounded-md">Giác quan</span>
+<span class="text-caption font-caption text-text-secondary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px]" data-icon="schedule">schedule</span> 2 phút
+                </span>
+</div>
+<h3 class="text-title-sm font-title-sm text-text-primary truncate">Nghỉ ngơi ngắn & Thả lỏng mắt</h3>
+<p class="text-body-md font-body-md text-text-secondary mt-0.5 text-xs line-clamp-2">Kỹ thuật 20-20-20 cho sinh viên học tập bên màn hình máy tính.</p>
+</div>
+<button aria-label="Mở bài tập" class="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:text-primary hover:bg-surface-mint transition-colors self-center" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="chevron_right">chevron_right</span>
+</button>
+</article>
+</div>
+</section>
+<!-- Personal Self-Care Checklist Section -->
+<section class="bg-surface-card rounded-[18px] p-space-md border border-border-subtle shadow-[0_4px_16px_-2px_rgba(20,87,64,0.05)] flex flex-col gap-space-md">
+<div class="flex items-center justify-between border-b border-border-subtle pb-space-sm">
+<div>
+<h2 class="text-title-sm font-title-sm text-text-primary">Kế hoạch cá nhân hôm nay</h2>
+<p class="text-caption font-caption text-text-secondary">Nhẹ nhàng hoàn thành theo tốc độ của bạn</p>
+</div>
+<span class="text-caption font-caption font-semibold px-2.5 py-1 rounded-full bg-surface-mint text-primary">1 / 3 hoàn thành</span>
+</div>
+<div class="flex flex-col gap-space-sm" id="selfcare-checklist">
+<!-- Item 1: Checked -->
+<label class="flex items-center gap-space-sm p-2 rounded-xl bg-page-background/70 border border-border-subtle cursor-pointer hover:bg-surface-mint/40 transition-colors">
+<input checked="" class="w-5 h-5 rounded-md text-primary focus:ring-focus-ring border-border-subtle cursor-pointer" type="checkbox"/>
+<span class="flex-1 text-body-md font-body-md text-text-secondary line-through select-none">Uống 1 ly nước ấm</span>
+<span class="material-symbols-outlined text-primary text-[18px]" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</label>
+<!-- Item 2: Unchecked -->
+<label class="flex items-center gap-space-sm p-2 rounded-xl bg-surface-card border border-border-subtle cursor-pointer hover:bg-surface-mint/40 transition-colors">
+<input class="w-5 h-5 rounded-md text-primary focus:ring-focus-ring border-border-subtle cursor-pointer" type="checkbox"/>
+<span class="flex-1 text-body-md font-body-md text-text-primary select-none">Đi dạo 10 phút</span>
+<span class="material-symbols-outlined text-text-secondary/60 text-[18px]" data-icon="radio_button_unchecked">radio_button_unchecked</span>
+</label>
+<!-- Item 3: Unchecked -->
+<label class="flex items-center gap-space-sm p-2 rounded-xl bg-surface-card border border-border-subtle cursor-pointer hover:bg-surface-mint/40 transition-colors">
+<input class="w-5 h-5 rounded-md text-primary focus:ring-focus-ring border-border-subtle cursor-pointer" type="checkbox"/>
+<span class="flex-1 text-body-md font-body-md text-text-primary select-none">Tắt màn hình trước 23:00</span>
+<span class="material-symbols-outlined text-text-secondary/60 text-[18px]" data-icon="radio_button_unchecked">radio_button_unchecked</span>
+</label>
+</div>
+<!-- Add Custom Habit Prompt -->
+<button class="w-full py-2.5 rounded-xl border border-dashed border-border-subtle text-primary hover:bg-surface-mint/50 active:scale-95 transition-all flex items-center justify-center gap-1.5 text-label-sm font-label-sm" type="button">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+<span>Thêm thói quen nhỏ của bạn</span>
+</button>
+</section>
+<!-- Supportive Provenance Tag / Philosophy Note -->
+<section class="text-center px-space-md py-space-xs mb-2">
+<p class="text-caption font-caption text-text-secondary">
+          Thực hành chánh niệm vi mô không tạo áp lực hoàn hảo. Bạn chỉ cần dành trọn 2 phút cho chính mình.
+        </p>
+</section>
+</main>
+<!-- Bottom Navigation Bar (Docked Mobile Shell) -->
+<!-- Matches JSON specification: 4 destinations ['Trang chủ', 'Nhật ký', 'MindCare AI', 'Thống kê'] -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-space-sm pb-space-sm pt-space-xs bg-surface-card dark:bg-inverse-surface shadow-sm max-w-[390px] left-1/2 -translate-x-1/2">
+<!-- Destination 1: Trang chủ (Active self-care / sanctuary home flow) -->
+<a class="flex flex-col items-center justify-center bg-surface-mint text-primary dark:bg-secondary-container dark:text-on-secondary-container rounded-xl px-3 py-1 font-semibold hover:bg-surface-mint active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[22px]" data-icon="home" data-weight="fill" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="text-label-sm font-label-sm mt-0.5">Trang chủ</span>
+</a>
+<!-- Destination 2: Nhật ký -->
+<a class="flex flex-col items-center justify-center text-text-secondary dark:text-outline px-3 py-1 font-medium hover:bg-surface-mint dark:hover:bg-surface-variant active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[22px]" data-icon="menu_book">menu_book</span>
+<span class="text-label-sm font-label-sm mt-0.5">Nhật ký</span>
+</a>
+<!-- Destination 3: MindCare AI -->
+<a class="flex flex-col items-center justify-center text-text-secondary dark:text-outline px-3 py-1 font-medium hover:bg-surface-mint dark:hover:bg-surface-variant active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[22px]" data-icon="smart_toy">smart_toy</span>
+<span class="text-label-sm font-label-sm mt-0.5">MindCare AI</span>
+</a>
+<!-- Destination 4: Thống kê -->
+<a class="flex flex-col items-center justify-center text-text-secondary dark:text-outline px-3 py-1 font-medium hover:bg-surface-mint dark:hover:bg-surface-variant active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[22px]" data-icon="bar_chart">bar_chart</span>
+<span class="text-label-sm font-label-sm mt-0.5">Thống kê</span>
+</a>
+</nav>
+</div>
+<!-- Interactive script for checklist & tab switching feedback -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Tab selector micro-interaction
+      const tabs = document.querySelectorAll('[role="tab"]');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => {
+            t.setAttribute('aria-selected', 'false');
+            t.className = 'bg-surface-card border border-border-subtle text-text-secondary text-label-md font-label-md px-4 py-2 rounded-xl whitespace-nowrap hover:bg-surface-mint hover:text-primary active:scale-95 transition-all';
+          });
+          tab.setAttribute('aria-selected', 'true');
+          tab.className = 'bg-primary text-on-primary text-label-md font-label-md px-4 py-2 rounded-xl whitespace-nowrap shadow-sm hover:opacity-95 active:scale-95 transition-all';
+        });
+      });
+
+      // Interactive checklist state toggle
+      const checklistInputs = document.querySelectorAll('#selfcare-checklist input[type="checkbox"]');
+      checklistInputs.forEach(input => {
+        input.addEventListener('change', (e) => {
+          const parentLabel = e.target.closest('label');
+          const textSpan = parentLabel.querySelector('span:first-of-type');
+          const iconSpan = parentLabel.querySelector('.material-symbols-outlined');
+          
+          if (e.target.checked) {
+            textSpan.classList.add('line-through', 'text-text-secondary');
+            textSpan.classList.remove('text-text-primary');
+            parentLabel.classList.add('bg-page-background/70');
+            iconSpan.textContent = 'check_circle';
+            iconSpan.setAttribute('data-icon', 'check_circle');
+            iconSpan.classList.remove('text-text-secondary/60');
+            iconSpan.classList.add('text-primary');
+            iconSpan.style.fontVariationSettings = "'FILL' 1";
+          } else {
+            textSpan.classList.remove('line-through', 'text-text-secondary');
+            textSpan.classList.add('text-text-primary');
+            parentLabel.classList.remove('bg-page-background/70');
+            iconSpan.textContent = 'radio_button_unchecked';
+            iconSpan.setAttribute('data-icon', 'radio_button_unchecked');
+            iconSpan.classList.add('text-text-secondary/60');
+            iconSpan.classList.remove('text-primary');
+            iconSpan.style.fontVariationSettings = "'FILL' 0";
+          }
+        });
+      });
+    });
+  </script>
+</body></html>

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MINDCARE - Thống kê &amp; Thấu hiểu</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-card": "#FFFFFF",
+            "error-container": "#ffdad6",
+            "tertiary-fixed": "#ffdcc1",
+            "background": "#e7fff2",
+            "inverse-primary": "#70dab1",
+            "border-subtle": "#DCEAE2",
+            "primary": "#00694d",
+            "on-secondary-fixed-variant": "#0a513a",
+            "on-surface-variant": "#3e4943",
+            "secondary-container": "#aff0d1",
+            "text-secondary": "#51695E",
+            "on-tertiary": "#ffffff",
+            "focus-ring": "#145740",
+            "surface-dim": "#c6e0d2",
+            "on-secondary": "#ffffff",
+            "surface-container-low": "#dffaec",
+            "secondary-fixed-dim": "#94d4b6",
+            "surface-tint": "#006c4f",
+            "tertiary": "#73563d",
+            "secondary-fixed": "#aff0d1",
+            "on-tertiary-container": "#fffbff",
+            "secondary": "#2a6951",
+            "tertiary-container": "#8e6e54",
+            "surface": "#e7fff2",
+            "primary-fixed": "#8df7cc",
+            "error": "#ba1a1a",
+            "on-error": "#ffffff",
+            "on-primary": "#ffffff",
+            "surface-container-high": "#d4eee0",
+            "on-background": "#082017",
+            "surface-bright": "#e7fff2",
+            "text-primary": "#173E30",
+            "primary-container": "#008562",
+            "inverse-on-surface": "#dcf7e9",
+            "on-error-container": "#93000a",
+            "primary-fixed-dim": "#70dab1",
+            "surface-container-highest": "#cee9db",
+            "outline-variant": "#bdcac1",
+            "surface-variant": "#cee9db",
+            "outline": "#6e7a73",
+            "inverse-surface": "#1e352c",
+            "on-secondary-fixed": "#002115",
+            "on-tertiary-fixed": "#2b1704",
+            "page-background": "#F5FBF8",
+            "on-surface": "#082017",
+            "on-secondary-container": "#316f57",
+            "on-primary-container": "#f5fff8",
+            "tertiary-fixed-dim": "#e6bfa1",
+            "on-tertiary-fixed-variant": "#5c412a",
+            "surface-container": "#d9f4e6",
+            "on-primary-fixed": "#002116",
+            "on-primary-fixed-variant": "#00513b",
+            "surface-mint": "#D7F2E5",
+            "surface-container-lowest": "#ffffff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "2xl": "1.125rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "margin": "2rem",
+            "space-xs": "0.25rem",
+            "gutter-mobile": "1rem",
+            "gutter": "1.5rem",
+            "space-lg": "1.5rem",
+            "space-md": "1rem",
+            "margin-mobile": "1rem",
+            "space-sm": "0.5rem",
+            "space-xl": "2rem"
+          },
+          "fontFamily": {
+            "display-lg-mobile": ["Be Vietnam Pro", "sans-serif"],
+            "display-lg": ["Be Vietnam Pro", "sans-serif"],
+            "body-lg": ["Be Vietnam Pro", "sans-serif"],
+            "title-sm": ["Be Vietnam Pro", "sans-serif"],
+            "title-md": ["Be Vietnam Pro", "sans-serif"],
+            "body-md": ["Be Vietnam Pro", "sans-serif"],
+            "headline-md": ["Be Vietnam Pro", "sans-serif"],
+            "caption": ["Be Vietnam Pro", "sans-serif"],
+            "label-md": ["Be Vietnam Pro", "sans-serif"],
+            "label-sm": ["Be Vietnam Pro", "sans-serif"]
+          },
+          "fontSize": {
+            "display-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+            "display-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+            "title-sm": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "title-md": ["18px", { "lineHeight": "26px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+            "headline-md": ["22px", { "lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "caption": ["11px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+            "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    body {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .card-shadow {
+      box-shadow: 0 4px 16px -2px rgba(20, 87, 64, 0.05);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-page-background text-text-primary antialiased min-h-screen flex justify-center pb-24">
+<!-- Mobile Screen Frame (390px max-width container) -->
+<div class="w-full max-w-[390px] min-h-screen bg-page-background flex flex-col relative select-none">
+<!-- TopAppBar (From Shared Components) -->
+<header class="bg-page-background dark:bg-inverse-surface flex justify-between items-center w-full px-space-md py-space-sm h-14 sticky top-0 z-40">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-surface-mint flex items-center justify-center text-primary font-bold text-label-md overflow-hidden border border-border-subtle" title="Ảnh hồ sơ cá nhân">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="account_circle">account_circle</span>
+</div>
+<span class="text-title-md font-title-md font-semibold text-text-primary dark:text-inverse-on-surface tracking-tight">MINDCARE</span>
+</div>
+<button class="w-9 h-9 rounded-full flex items-center justify-center text-primary dark:text-inverse-primary hover:bg-surface-mint dark:hover:bg-surface-variant active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 px-space-md pt-space-xs space-y-space-md">
+<!-- Screen Title & Segmented Control -->
+<section class="space-y-space-sm">
+<div class="flex items-center justify-between">
+<h1 class="text-display-lg-mobile font-display-lg-mobile text-text-primary">Thống kê &amp; Thấu hiểu</h1>
+<span class="material-symbols-outlined text-primary text-[22px]" data-icon="insights">insights</span>
+</div>
+<!-- Segmented Control Native Mobile -->
+<div class="bg-surface-container-high/60 p-1 rounded-xl flex items-center border border-border-subtle">
+<button class="flex-1 py-1.5 text-center text-label-sm font-label-sm font-semibold rounded-lg bg-surface-card text-primary card-shadow transition-all">
+            7 ngày qua
+          </button>
+<button class="flex-1 py-1.5 text-center text-label-sm font-label-sm text-text-secondary hover:text-text-primary transition-all">
+            30 ngày
+          </button>
+<button class="flex-1 py-1.5 text-center text-label-sm font-label-sm text-text-secondary hover:text-text-primary transition-all">
+            Theo tháng
+          </button>
+</div>
+<!-- Provenance Badge -->
+<div class="bg-surface-mint/60 border border-border-subtle rounded-xl p-space-sm flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5" data-icon="verified_user">verified_user</span>
+<p class="text-caption font-caption text-text-secondary leading-snug">
+<span class="font-semibold text-primary">Dữ liệu do bạn tự đánh giá</span> từ 12/10 – 18/10/2026. Không phải kết luận y tế.
+          </p>
+</div>
+</section>
+<!-- Card 1: Xu hướng Cảm xúc & Stress (Bento Item 1) -->
+<section class="bg-surface-card rounded-2xl p-space-md border border-border-subtle card-shadow space-y-space-md">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="text-title-sm font-title-sm text-text-primary">Xu hướng Cảm xúc &amp; Stress</h2>
+<p class="text-caption font-caption text-text-secondary">Thang điểm tự cảm nhận 1 - 10</p>
+</div>
+<!-- Legend -->
+<div class="flex items-center gap-space-sm text-caption font-caption">
+<div class="flex items-center gap-1">
+<span class="w-2.5 h-2.5 rounded-full bg-primary inline-block"></span>
+<span class="text-text-primary font-medium">Tâm trạng</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="w-2.5 h-2.5 rounded-full bg-[#38B2AC] inline-block"></span>
+<span class="text-text-secondary font-medium">Stress</span>
+</div>
+</div>
+</div>
+<!-- Touch-Friendly Dual Line Chart SVG -->
+<div class="relative w-full pt-1">
+<svg class="w-full h-36 overflow-visible" fill="none" viewbox="0 0 320 120">
+<!-- Subtle gridlines -->
+<line stroke="#DCEAE2" stroke-dasharray="3 3" stroke-width="0.75" x1="0" x2="320" y1="20" y2="20"></line>
+<line stroke="#DCEAE2" stroke-dasharray="3 3" stroke-width="0.75" x1="0" x2="320" y1="60" y2="60"></line>
+<line stroke="#DCEAE2" stroke-dasharray="3 3" stroke-width="0.75" x1="0" x2="320" y1="100" y2="100"></line>
+<!-- Area beneath Mood line (soft gradient tint) -->
+<path d="M 15 60 L 65 48 L 115 60 L 165 48 L 215 36 L 265 48 L 305 48 L 305 105 L 15 105 Z" fill="#D7F2E5" fill-opacity="0.35"></path>
+<!-- Stress Line (Teal/Turquoise #38B2AC) Values: T2:6 (48), T3:5 (60), T4:6 (48), T5:5 (60), T6:4 (72), T7:5 (60), CN:4 (72) -->
+<path d="M 15 48 L 65 60 L 115 48 L 165 60 L 215 72 L 265 60 L 305 72" stroke="#38B2AC" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+<!-- Mood Line (Deep Primary Emerald #00694d) Values: T2:5 (60), T3:6 (48), T4:5 (60), T5:6 (48), T6:7 (36), T7:6 (48), CN:6 (48) -->
+<path d="M 15 60 L 65 48 L 115 60 L 165 48 L 215 36 L 265 48 L 305 48" stroke="#00694d" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+<!-- Data Points: T2 (15) -->
+<circle cx="15" cy="60" fill="#00694d" r="4" stroke="#FFFFFF" stroke-width="1.5"></circle>
+<circle cx="15" cy="48" fill="#38B2AC" r="4" stroke="#FFFFFF" stroke-width="1.5"></circle>
+<!-- Data Points: T3 (65) -->
+<circle cx="65" cy="48" fill="#00694d" r="4" stroke="#FFFFFF" stroke-width="1.5"></circle>
+<circle cx="65" cy="60" fill="#38B2AC" r="4" stroke="#FFFFFF" stroke-width="1.5"></circle>
+<!-- Data Points: T4 (115) -->
+<circle cx="115" cy="60" fill="#00694d" r="4" stroke="#FFFFFF" stroke-width="1.5"></circle>
+<circle cx="115" cy="48" fill="#38B2AC" r="4" stroke="#FFFFFF" stroke-width="1.5"></circle>
+<!-- Data Points: T5 (165) -->
+<circle cx="165" cy="48" fill="#00694d" r="4" stroke="#FFFFFF" stroke-width="1.5"></circle>
+<circle cx="165" cy="60" fill="#38B2AC" r="4" stroke="#FFFFFF" stroke-width="1.5"></circle>
+<!-- Data Points: T6 (215) - Best day highlight -->
+<circle cx="215" cy="36" fill="#00694d" r="5" stroke="#D7F2E5" stroke-width="2"></circle>
+<circle cx="215" cy="72" fill="#38B2AC" r="4" stroke="#FFFFFF" stroke-width="1.5"></circle>
+<!-- Data Points: T7 (265) -->
+<circle cx="265" cy="48" fill="#00694d" r="4" stroke="#FFFFFF" stroke-width="1.5"></circle>
+<circle cx="265" cy="60" fill="#38B2AC" r="4" stroke="#FFFFFF" stroke-width="1.5"></circle>
+<!-- Data Points: CN (305) -->
+<circle cx="305" cy="48" fill="#00694d" r="4" stroke="#FFFFFF" stroke-width="1.5"></circle>
+<circle cx="305" cy="72" fill="#38B2AC" r="4" stroke="#FFFFFF" stroke-width="1.5"></circle>
+</svg>
+<!-- Daily Touch Markers & Coordinates Readout -->
+<div class="grid grid-cols-7 text-center pt-2 border-t border-border-subtle/50">
+<div class="flex flex-col items-center">
+<span class="text-caption font-caption text-text-secondary font-medium">T2</span>
+<span class="text-[10px] font-semibold text-primary leading-tight mt-0.5">5<span class="text-[#38B2AC]">/6</span></span>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-caption font-caption text-text-secondary font-medium">T3</span>
+<span class="text-[10px] font-semibold text-primary leading-tight mt-0.5">6<span class="text-[#38B2AC]">/5</span></span>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-caption font-caption text-text-secondary font-medium">T4</span>
+<span class="text-[10px] font-semibold text-primary leading-tight mt-0.5">5<span class="text-[#38B2AC]">/6</span></span>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-caption font-caption text-text-secondary font-medium">T5</span>
+<span class="text-[10px] font-semibold text-primary leading-tight mt-0.5">6<span class="text-[#38B2AC]">/5</span></span>
+</div>
+<div class="flex flex-col items-center bg-surface-mint/30 rounded-lg py-0.5">
+<span class="text-caption font-caption text-primary font-bold">T6</span>
+<span class="text-[10px] font-bold text-primary leading-tight mt-0.5">7<span class="text-[#38B2AC]">/4</span></span>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-caption font-caption text-text-secondary font-medium">T7</span>
+<span class="text-[10px] font-semibold text-primary leading-tight mt-0.5">6<span class="text-[#38B2AC]">/5</span></span>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-caption font-caption text-text-secondary font-medium">CN</span>
+<span class="text-[10px] font-semibold text-primary leading-tight mt-0.5">6<span class="text-[#38B2AC]">/4</span></span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low p-2.5 rounded-xl flex items-center justify-between text-caption font-caption text-text-secondary">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="nature_people">nature_people</span>
+            Trạng thái cân bằng nhất: Thứ 6 (T6)
+          </span>
+<span class="text-primary font-semibold">Tâm trạng 7 / Stress 4</span>
+</div>
+</section>
+<!-- Card 2: Phân tích Giấc ngủ -->
+<section class="bg-surface-card rounded-2xl p-space-md border border-border-subtle card-shadow space-y-space-sm">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="text-title-sm font-title-sm text-text-primary">Thời lượng &amp; Giấc ngủ</h2>
+<p class="text-caption font-caption text-text-secondary">Chu kỳ hồi phục ban đêm</p>
+</div>
+<div class="text-right">
+<div class="text-title-md font-title-md text-primary font-bold">7,1 <span class="text-label-sm font-normal text-text-secondary">giờ/đêm</span></div>
+<span class="text-caption font-caption text-text-secondary">Trung bình tuần</span>
+</div>
+</div>
+<!-- 7-Day Sleep Duration Bar Chart -->
+<div class="pt-2 pb-1">
+<div class="flex items-end justify-between h-28 gap-2 px-1">
+<!-- T2: 6.5h -->
+<div class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+<span class="text-[10px] text-text-secondary font-medium">6,5h</span>
+<div class="w-full bg-secondary-container rounded-t-md hover:bg-primary transition-all" style="height: 65%;"></div>
+<span class="text-caption font-caption text-text-secondary mt-1">T2</span>
+</div>
+<!-- T3: 7.2h -->
+<div class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+<span class="text-[10px] text-text-secondary font-medium">7,2h</span>
+<div class="w-full bg-primary/80 rounded-t-md hover:bg-primary transition-all" style="height: 72%;"></div>
+<span class="text-caption font-caption text-text-secondary mt-1">T3</span>
+</div>
+<!-- T4: 6.0h (Chập chờn) -->
+<div class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+<span class="text-[10px] text-tertiary font-medium">6,0h</span>
+<div class="w-full bg-tertiary-fixed rounded-t-md hover:bg-tertiary transition-all" style="height: 60%;"></div>
+<span class="text-caption font-caption text-text-secondary mt-1">T4</span>
+</div>
+<!-- T5: 7.5h -->
+<div class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+<span class="text-[10px] text-primary font-medium">7,5h</span>
+<div class="w-full bg-primary rounded-t-md transition-all" style="height: 75%;"></div>
+<span class="text-caption font-caption text-text-secondary mt-1">T5</span>
+</div>
+<!-- T6: 8.2h -->
+<div class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+<span class="text-[10px] text-primary font-bold">8,2h</span>
+<div class="w-full bg-primary rounded-t-md transition-all" style="height: 82%;"></div>
+<span class="text-caption font-caption text-primary font-bold mt-1">T6</span>
+</div>
+<!-- T7: 7.8h -->
+<div class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+<span class="text-[10px] text-primary font-medium">7,8h</span>
+<div class="w-full bg-primary/85 rounded-t-md transition-all" style="height: 78%;"></div>
+<span class="text-caption font-caption text-text-secondary mt-1">T7</span>
+</div>
+<!-- CN: 6.5h (Chập chờn) -->
+<div class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+<span class="text-[10px] text-tertiary font-medium">6,5h</span>
+<div class="w-full bg-tertiary-fixed rounded-t-md hover:bg-tertiary transition-all" style="height: 65%;"></div>
+<span class="text-caption font-caption text-text-secondary mt-1">CN</span>
+</div>
+</div>
+</div>
+<!-- Sleep Quality Pills -->
+<div class="grid grid-cols-2 gap-space-sm pt-2">
+<div class="bg-surface-mint/70 rounded-xl p-2.5 flex items-center gap-2 border border-border-subtle">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="bedtime">bedtime</span>
+<div>
+<div class="text-title-sm font-title-sm text-text-primary">5 đêm</div>
+<div class="text-caption font-caption text-text-secondary leading-none">Ngon giấc (≥7h)</div>
+</div>
+</div>
+<div class="bg-surface-container-high/60 rounded-xl p-2.5 flex items-center gap-2 border border-border-subtle">
+<span class="material-symbols-outlined text-tertiary text-[20px]" data-icon="timelapse">timelapse</span>
+<div>
+<div class="text-title-sm font-title-sm text-text-primary">2 đêm</div>
+<div class="text-caption font-caption text-text-secondary leading-none">Chập chờn (&lt;7h)</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Card 3: Cảm xúc xuất hiện nhiều nhất tuần qua -->
+<section class="bg-surface-card rounded-2xl p-space-md border border-border-subtle card-shadow space-y-space-md">
+<div class="flex items-center justify-between">
+<h2 class="text-title-sm font-title-sm text-text-primary">Cảm xúc xuất hiện nhiều nhất</h2>
+<span class="text-caption font-caption text-text-secondary bg-surface-container-high px-2 py-0.5 rounded-full font-medium">14 ghi nhận</span>
+</div>
+<!-- Emotion Percentages Breakdown (Horizontal bar & chips) -->
+<div class="space-y-space-sm">
+<!-- Item 1: Biết ơn (35%) -->
+<div class="space-y-1">
+<div class="flex justify-between items-center text-body-md font-body-md">
+<span class="flex items-center gap-1.5 font-medium text-text-primary">
+<span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+                Biết ơn &amp; Đầy năng lượng
+              </span>
+<span class="text-primary font-bold text-label-md font-label-md">35%</span>
+</div>
+<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 35%;"></div>
+</div>
+</div>
+<!-- Item 2: Hơi lo lắng (25%) -->
+<div class="space-y-1">
+<div class="flex justify-between items-center text-body-md font-body-md">
+<span class="flex items-center gap-1.5 font-medium text-text-primary">
+<span class="w-2.5 h-2.5 rounded-full bg-[#38B2AC]"></span>
+                Hơi lo lắng (Deadline, bài thi)
+              </span>
+<span class="text-text-primary font-semibold text-label-md font-label-md">25%</span>
+</div>
+<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
+<div class="bg-[#38B2AC] h-full rounded-full" style="width: 25%;"></div>
+</div>
+</div>
+<!-- Item 3: Tập trung (20%) -->
+<div class="space-y-1">
+<div class="flex justify-between items-center text-body-md font-body-md">
+<span class="flex items-center gap-1.5 font-medium text-text-primary">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+                Tập trung &amp; Hiệu quả
+              </span>
+<span class="text-text-primary font-semibold text-label-md font-label-md">20%</span>
+</div>
+<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 20%;"></div>
+</div>
+</div>
+<!-- Item 4: Bình yên (20%) -->
+<div class="space-y-1">
+<div class="flex justify-between items-center text-body-md font-body-md">
+<span class="flex items-center gap-1.5 font-medium text-text-primary">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary-fixed-dim"></span>
+                Bình yên &amp; Thư thả
+              </span>
+<span class="text-text-primary font-semibold text-label-md font-label-md">20%</span>
+</div>
+<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
+<div class="bg-secondary-fixed-dim h-full rounded-full" style="width: 20%;"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Card 4: Nhận định tương quan AI -->
+<section class="bg-gradient-to-br from-surface-mint via-surface-card to-surface-container-low rounded-2xl p-space-md border border-border-subtle card-shadow space-y-space-sm relative overflow-hidden">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="auto_awesome">auto_awesome</span>
+<span class="text-label-md font-label-md text-primary font-bold">Thấu hiểu Tương quan AI</span>
+</div>
+<!-- Provenance chip -->
+<span class="text-[11px] font-medium bg-surface-card text-primary px-2.5 py-0.5 rounded-full border border-border-subtle">
+            Dựa trên 7 check-in tự ghi
+          </span>
+</div>
+<p class="text-body-md font-body-md text-text-primary leading-relaxed">
+          “Khi bạn <span class="font-semibold text-primary">ngủ trên 7 giờ</span>, mức độ stress ghi nhận vào ngày hôm sau thường <span class="font-semibold text-primary">thấp hơn đáng kể (3-4/10)</span> so với những ngày thiếu ngủ.”
+        </p>
+<div class="pt-1 flex items-center justify-between text-caption font-caption text-text-secondary border-t border-border-subtle/80">
+<span>Gợi ý nhẹ nhàng: Duy trì giờ ngủ cố định 23:00</span>
+<span class="text-primary font-semibold flex items-center gap-0.5">
+            Xem thêm <span class="material-symbols-outlined text-[14px]" data-icon="chevron_right">chevron_right</span>
+</span>
+</div>
+</section>
+<!-- Supportive Nature Note -->
+<div class="text-center py-2">
+<p class="text-caption font-caption text-text-secondary flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="spa">spa</span>
+          Mỗi tuần là một nhịp điệu riêng. Hãy trân trọng từng khoảnh khắc của chính bạn.
+        </p>
+</div>
+</main>
+<!-- BottomNavBar (From Shared Components - Active Tab 4: Thống kê) -->
+<!-- Prohibited border lines, elevated cleanly via subtle shadow-sm & tonal shift -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-space-sm pb-space-sm pt-space-xs bg-surface-card dark:bg-inverse-surface shadow-sm">
+<!-- Tab 1: Trang chủ -->
+<a class="flex flex-col items-center justify-center text-text-secondary dark:text-outline px-3 py-1 font-medium active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="home">home</span>
+<span class="text-label-sm font-label-sm mt-0.5">Trang chủ</span>
+</a>
+<!-- Tab 2: Nhật ký -->
+<a class="flex flex-col items-center justify-center text-text-secondary dark:text-outline px-3 py-1 font-medium active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="menu_book">menu_book</span>
+<span class="text-label-sm font-label-sm mt-0.5">Nhật ký</span>
+</a>
+<!-- Tab 3: MindCare AI -->
+<a class="flex flex-col items-center justify-center text-text-secondary dark:text-outline px-3 py-1 font-medium active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="smart_toy">smart_toy</span>
+<span class="text-label-sm font-label-sm mt-0.5">MindCare AI</span>
+</a>
+<!-- Tab 4: Thống kê (ACTIVE TAB) -->
+<a class="flex flex-col items-center justify-center bg-surface-mint text-primary dark:bg-secondary-container dark:text-on-secondary-container rounded-xl px-3 py-1 font-semibold active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="bar_chart" data-weight="fill" style="font-variation-settings: 'FILL' 1;">bar_chart</span>
+<span class="text-label-sm font-label-sm mt-0.5">Thống kê</span>
+</a>
+</nav>
+</div>
+</body></html>

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MINDCARE Mobile - Soạn thảo nhật ký</title>
+<!-- Google Fonts: Be Vietnam Pro -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "error-container": "#ffdad6",
+            "surface-bright": "#e7fff2",
+            "inverse-surface": "#1e352c",
+            "surface-dim": "#c6e0d2",
+            "primary-fixed": "#8df7cc",
+            "page-background": "#F5FBF8",
+            "on-tertiary-container": "#fffbff",
+            "surface-variant": "#cee9db",
+            "border-subtle": "#DCEAE2",
+            "surface-container-high": "#d4eee0",
+            "primary": "#00694d",
+            "surface-mint": "#D7F2E5",
+            "focus-ring": "#145740",
+            "secondary-fixed-dim": "#94d4b6",
+            "on-primary-container": "#f5fff8",
+            "inverse-primary": "#70dab1",
+            "on-primary-fixed": "#002116",
+            "secondary": "#2a6951",
+            "primary-container": "#008562",
+            "surface-container": "#d9f4e6",
+            "on-tertiary-fixed-variant": "#5c412a",
+            "error": "#ba1a1a",
+            "text-primary": "#173E30",
+            "surface-card": "#FFFFFF",
+            "on-error": "#ffffff",
+            "on-tertiary-fixed": "#2b1704",
+            "secondary-fixed": "#aff0d1",
+            "on-secondary-fixed": "#002115",
+            "tertiary": "#73563d",
+            "surface-container-low": "#dffaec",
+            "secondary-container": "#aff0d1",
+            "surface": "#e7fff2",
+            "text-secondary": "#51695E",
+            "tertiary-fixed": "#ffdcc1",
+            "surface-tint": "#006c4f",
+            "on-error-container": "#93000a",
+            "on-secondary-fixed-variant": "#0a513a",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-highest": "#cee9db",
+            "on-surface": "#082017",
+            "on-surface-variant": "#3e4943",
+            "background": "#e7fff2",
+            "on-background": "#082017",
+            "tertiary-container": "#8e6e54",
+            "on-primary": "#ffffff",
+            "inverse-on-surface": "#dcf7e9",
+            "on-secondary": "#ffffff",
+            "outline": "#6e7a73",
+            "on-primary-fixed-variant": "#00513b",
+            "on-tertiary": "#ffffff",
+            "tertiary-fixed-dim": "#e6bfa1",
+            "on-secondary-container": "#316f57",
+            "primary-fixed-dim": "#70dab1",
+            "outline-variant": "#bdcac1"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "2xl": "1.125rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xs": "0.25rem",
+            "space-xl": "2rem",
+            "gutter": "1.5rem",
+            "margin-mobile": "1rem",
+            "space-md": "1rem",
+            "space-lg": "1.5rem",
+            "margin": "2rem",
+            "gutter-mobile": "1rem",
+            "space-sm": "0.5rem"
+          },
+          "fontFamily": {
+            "title-md": ["Be Vietnam Pro"],
+            "title-sm": ["Be Vietnam Pro"],
+            "label-md": ["Be Vietnam Pro"],
+            "label-sm": ["Be Vietnam Pro"],
+            "display-lg": ["Be Vietnam Pro"],
+            "caption": ["Be Vietnam Pro"],
+            "body-md": ["Be Vietnam Pro"],
+            "headline-md": ["Be Vietnam Pro"],
+            "display-lg-mobile": ["Be Vietnam Pro"],
+            "body-lg": ["Be Vietnam Pro"]
+          },
+          "fontSize": {
+            "title-md": ["18px", { "lineHeight": "26px", "fontWeight": "600" }],
+            "title-sm": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+            "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+            "display-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "caption": ["11px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+            "headline-md": ["22px", { "lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "display-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+            "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    body {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .smooth-shadow {
+      box-shadow: 0 4px 16px -2px rgba(20, 87, 64, 0.05);
+    }
+    .toolbar-shadow {
+      box-shadow: 0 -4px 18px rgba(20, 87, 64, 0.06);
+    }
+    /* Hide scrollbars while preserving scrolling */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-page-background text-text-primary antialiased min-h-screen flex justify-center selection:bg-surface-mint selection:text-text-primary">
+<!-- Mobile Viewport Container (Simulated 390px Native Screen) -->
+<div class="w-full max-w-[390px] min-h-screen bg-page-background flex flex-col relative pb-24 shadow-2xl">
+<!-- Top Status Bar & Navigation Header -->
+<header class="sticky top-0 z-40 bg-page-background/90 backdrop-blur-md px-4 pt-3 pb-2 transition-all">
+<div class="flex items-center justify-between gap-2">
+<!-- Close / Cancel Button -->
+<button aria-label="Quay lại hoặc hủy" class="w-10 h-10 -ml-1 rounded-full flex items-center justify-center text-text-secondary hover:bg-surface-mint active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[24px]">close</span>
+</button>
+<!-- Center Metadata -->
+<div class="text-center flex-1">
+<h1 class="text-title-sm font-title-sm text-text-primary font-semibold tracking-tight">Viết nhật ký</h1>
+<p class="text-caption font-caption text-text-secondary flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-primary" data-weight="fill" style="font-variation-settings: 'FILL' 1;">calendar_today</span>
+<span>Chủ nhật, 18/10/2026</span>
+</p>
+</div>
+<!-- Primary Save Action Button -->
+<button class="bg-focus-ring text-white px-3.5 py-1.5 rounded-xl text-label-md font-label-md font-semibold hover:opacity-95 active:scale-95 transition-all flex items-center gap-1 shadow-sm" type="button">
+<span>Lưu nhật ký</span>
+</button>
+</div>
+</header>
+<!-- Main Content Form Area -->
+<main class="flex-1 px-4 pt-2 space-y-4">
+<!-- Privacy Banner Card -->
+<section class="bg-surface-card border border-border-subtle rounded-2xl p-3.5 smooth-shadow flex items-start gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-mint flex items-center justify-center text-focus-ring flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[18px]" data-weight="fill" style="font-variation-settings: 'FILL' 1;">lock</span>
+</div>
+<div class="space-y-0.5">
+<div class="flex items-center gap-1.5">
+<span class="text-label-sm font-label-sm font-semibold text-text-primary">Không gian bảo mật riêng tư</span>
+<span class="bg-surface-mint text-focus-ring text-[10px] px-1.5 py-0.2 rounded-full font-medium">Bảo vệ</span>
+</div>
+<p class="text-body-md font-body-md text-text-secondary leading-snug">
+            Chỉ bạn mới xem nhật ký này, trừ khi bạn chủ động chia sẻ.
+          </p>
+</div>
+</section>
+<!-- Emotion Selector / Quick Tags -->
+<section class="space-y-2">
+<div class="flex items-center justify-between">
+<label class="text-label-md font-label-md font-semibold text-text-primary">Cảm xúc hiện tại của bạn</label>
+<span class="text-caption font-caption text-text-secondary">Chạm để chọn</span>
+</div>
+<div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+<!-- Active Pill 1: Nhẹ nhõm -->
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-mint border border-primary text-focus-ring text-label-sm font-label-sm font-semibold flex-shrink-0 active:scale-95 transition-all shadow-sm" type="button">
+<span class="text-sm">🍃</span>
+<span>Nhẹ nhõm 6/10</span>
+<span class="material-symbols-outlined text-[14px]">check</span>
+</button>
+<!-- Active Pill 2: Hơi lo lắng -->
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-mint border border-primary text-focus-ring text-label-sm font-label-sm font-semibold flex-shrink-0 active:scale-95 transition-all shadow-sm" type="button">
+<span class="text-sm">🌧️</span>
+<span>Hơi lo lắng</span>
+<span class="material-symbols-outlined text-[14px]">check</span>
+</button>
+<!-- Inactive Pill: Biết ơn -->
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-card border border-border-subtle text-text-secondary text-label-sm font-label-sm hover:border-primary active:scale-95 transition-all flex-shrink-0" type="button">
+<span class="text-sm">🌱</span>
+<span>Biết ơn</span>
+</button>
+<!-- Inactive Pill: Cần nghỉ ngơi -->
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-card border border-border-subtle text-text-secondary text-label-sm font-label-sm hover:border-primary active:scale-95 transition-all flex-shrink-0" type="button">
+<span class="text-sm">☕</span>
+<span>Cần nghỉ ngơi</span>
+</button>
+</div>
+</section>
+<!-- Main Editor Container (Card Layout) -->
+<section class="bg-surface-card border border-border-subtle rounded-2xl p-4 smooth-shadow space-y-3 focus-within:border-focus-ring transition-colors">
+<!-- Title Input -->
+<div>
+<label class="sr-only" for="journal-title">Tiêu đề nhật ký</label>
+<input class="w-full bg-transparent border-0 p-0 text-title-md font-title-md font-semibold text-text-primary placeholder:text-text-secondary/60 focus:ring-0 focus:outline-none" id="journal-title" placeholder="Hôm nay bạn muốn đặt tựa đề gì cho dòng suy nghĩ?" type="text" value="Một bước nhỏ hoàn thành bài đồ án tốt nghiệp"/>
+</div>
+<div class="h-[1px] w-full bg-border-subtle"></div>
+<!-- Body Textarea -->
+<div>
+<label class="sr-only" for="journal-body">Nội dung nhật ký</label>
+<textarea class="w-full bg-transparent border-0 p-0 text-body-lg font-body-lg text-text-primary placeholder:text-text-secondary/60 focus:ring-0 focus:outline-none resize-none leading-relaxed" id="journal-body" placeholder="Hãy viết ra bất cứ điều gì đang diễn ra trong tâm trí bạn..." rows="6">Hôm nay mình đã hoàn thành một phần bài tập đồ án tốt nghiệp. Dù vẫn hơi lo về hạn nộp cuối tháng, nhưng cảm thấy nhẹ nhõm hơn nhiều khi chia nhỏ việc. Mình đã dành 30 phút buổi chiều đi dạo dưới tán cây quanh khuôn viên trường để hít thở và thả lỏng đầu óc.</textarea>
+</div>
+<!-- Editor Metadata Footer -->
+<div class="flex items-center justify-between pt-1 border-t border-border-subtle/50 text-caption font-caption text-text-secondary">
+<div class="flex items-center gap-2">
+<span class="inline-block w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span>Đã tự động lưu nháp lúc 21:42</span>
+</div>
+<span>314 ký tự • ~2 phút đọc</span>
+</div>
+</section>
+<!-- AI Emotion Analysis Insight Card -->
+<section class="bg-surface-card border border-border-subtle rounded-2xl p-4 smooth-shadow space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-lg bg-surface-mint text-focus-ring flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]">psychology</span>
+</span>
+<h2 class="text-title-sm font-title-sm text-text-primary font-semibold">Nhận diện cảm xúc AI (Ước lượng)</h2>
+</div>
+<span class="bg-surface-mint text-focus-ring text-caption font-caption font-medium px-2 py-0.5 rounded-md border border-border-subtle">Dựa trên check-in</span>
+</div>
+<div class="p-3 bg-page-background rounded-xl border border-border-subtle/80 space-y-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="text-base">✨</span>
+<span class="text-label-md font-label-md font-semibold text-text-primary">Cảm xúc gợi ý: Tích cực nhẹ (6/10)</span>
+</div>
+<span class="text-label-sm font-label-sm text-primary font-medium">Cân bằng</span>
+</div>
+<!-- Continuous Mood Bar Indicator -->
+<div class="w-full h-2 bg-border-subtle rounded-full overflow-hidden">
+<div class="h-full bg-primary-container rounded-full" style="width: 62%;"></div>
+</div>
+<p class="text-body-md font-body-md text-text-secondary text-xs leading-relaxed">
+            Đây chỉ là ước tính tham khảo dựa trên từ ngữ bạn viết, bạn có thể chỉnh sửa bất cứ lúc nào.
+          </p>
+</div>
+<div class="flex justify-end">
+<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-primary text-focus-ring text-label-sm font-label-sm font-semibold hover:bg-surface-mint active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]">tune</span>
+<span>Tùy chỉnh cảm xúc</span>
+</button>
+</div>
+</section>
+<!-- AI Data Permission & Privacy Control -->
+<section class="bg-surface-card border border-border-subtle rounded-2xl p-4 smooth-shadow space-y-2.5">
+<div class="flex items-center justify-between gap-3">
+<div class="space-y-0.5 flex-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-focus-ring text-[18px]">verified_user</span>
+<span class="text-label-md font-label-md font-semibold text-text-primary">Kiểm soát quyền dữ liệu AI</span>
+</div>
+<p class="text-label-sm font-label-sm text-text-secondary leading-snug">
+              Cho phép AI MindCare tham khảo bài viết này để phản hồi khi trò chuyện
+            </p>
+</div>
+<!-- Switch Toggle (Default: OFF as mandated) -->
+<label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+<input class="sr-only peer" id="ai-toggle" type="checkbox"/>
+<div class="w-11 h-6 bg-border-subtle peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border-subtle after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-focus-ring"></div>
+</label>
+</div>
+<div class="p-2.5 bg-surface-mint/50 rounded-xl border border-border-subtle flex items-start gap-2 text-text-secondary text-caption font-caption leading-relaxed">
+<span class="material-symbols-outlined text-primary text-[15px] flex-shrink-0 mt-0.5">info</span>
+<span>MINDCARE không bao giờ gửi nội dung nhật ký cho người thứ ba hoặc người thân. Quyền riêng tư là cam kết cốt lõi của chúng tôi.</span>
+</div>
+</section>
+</main>
+<!-- Bottom Ergonomic Thumb Toolbar (Fixed Docked Bar for Writing Actions) -->
+<nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] bg-surface-card/95 backdrop-blur-md border-t border-border-subtle px-3 py-2 z-50 toolbar-shadow flex items-center justify-between">
+<!-- Quick Formatting Icons -->
+<div class="flex items-center gap-1">
+<button aria-label="Thêm gạch đầu dòng" class="w-9 h-9 rounded-xl flex items-center justify-center text-text-secondary hover:bg-surface-mint hover:text-focus-ring active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]">format_list_bulleted</span>
+</button>
+<button aria-label="Thêm trích dẫn" class="w-9 h-9 rounded-xl flex items-center justify-center text-text-secondary hover:bg-surface-mint hover:text-focus-ring active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]">format_quote</span>
+</button>
+<button aria-label="Thêm hình ảnh kỷ niệm" class="w-9 h-9 rounded-xl flex items-center justify-center text-text-secondary hover:bg-surface-mint hover:text-focus-ring active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]">add_photo_alternate</span>
+</button>
+<button aria-label="Ghi âm giọng nói" class="w-9 h-9 rounded-xl flex items-center justify-center text-text-secondary hover:bg-surface-mint hover:text-focus-ring active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]">mic</span>
+</button>
+<button aria-label="Bộ chọn biểu tượng cảm xúc" class="w-9 h-9 rounded-xl flex items-center justify-center text-text-secondary hover:bg-surface-mint hover:text-focus-ring active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]">mood</span>
+</button>
+</div>
+<!-- Action Button / Done Typing Keyboard Dismiss -->
+<div class="flex items-center gap-2">
+<button aria-label="Thu gọn bàn phím" class="w-9 h-9 rounded-xl bg-surface-mint text-focus-ring flex items-center justify-center active:scale-95 transition-all shadow-sm" type="button">
+<span class="material-symbols-outlined text-[20px]">keyboard_hide</span>
+</button>
+</div>
+</nav>
+</div>
+<!-- Micro-interactions Script -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const textarea = document.getElementById('journal-body');
+      
+      // Auto expand textarea slightly based on content
+      if (textarea) {
+        textarea.addEventListener('input', function() {
+          this.style.height = 'auto';
+          this.style.height = (this.scrollHeight) + 'px';
+        });
+      }
+
+      // Toggle switch feedback
+      const aiToggle = document.getElementById('ai-toggle');
+      if (aiToggle) {
+        aiToggle.addEventListener('change', (e) => {
+          if (e.target.checked) {
+            console.log("MindCare AI reference enabled for this entry.");
+          } else {
+            console.log("MindCare AI reference kept private (OFF).");
+          }
+        });
+      }
+    });
+  </script>
+</body></html>

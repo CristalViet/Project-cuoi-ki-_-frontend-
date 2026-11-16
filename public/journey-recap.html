@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindCare · Nhìn lại tuần qua</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --font-main: "Be Vietnam Pro", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --color-primary: #00694D;
+      --color-primary-dark: #06281E;
+      --color-secondary: #38B2AC;
+      --color-text-dark: #0C4B38;
+      --color-text-muted: #5B7A6E;
+      --color-mint-light: #E3F5EC;
+      --color-mint-soft: #DFFAEC;
+      --color-overlay-bg: #06150F;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background-color: #0c1a15;
+      color: #173E30;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 18px 12px 40px;
+    }
+
+    /* Top Control Switcher Bar */
+    .top-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 999px;
+      padding: 6px 14px;
+      color: #fff;
+      font-size: 13px;
+      z-index: 100;
+    }
+
+    .top-toolbar button {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .top-toolbar button.active {
+      background: #38B2AC;
+      border-color: #38B2AC;
+      color: #06150F;
+      box-shadow: 0 2px 8px rgba(56, 178, 172, 0.4);
+    }
+
+    .top-toolbar .divider {
+      width: 1px;
+      height: 16px;
+      background: rgba(255, 255, 255, 0.2);
+      margin: 0 4px;
+    }
+
+    /* Device Stage Viewport */
+    .device-viewport {
+      position: relative;
+      background: #F5FBF8;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Mobile mode: 390x790, rounded 38px */
+    .device-viewport.mode-mobile {
+      width: 390px;
+      height: 790px;
+      border-radius: 38px;
+    }
+
+    /* Web mode: 1140x740, rounded 20px */
+    .device-viewport.mode-web {
+      width: 1140px;
+      height: 740px;
+      border-radius: 20px;
+    }
+
+    /* Simulated "Hôm nay" screen scrollable content */
+    .screen-today {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .screen-today::-webkit-scrollbar {
+      display: none;
+    }
+    .screen-today {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* App Header in simulated screen */
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 8px;
+    }
+
+    .app-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      color: var(--color-primary);
+      font-size: 18px;
+      letter-spacing: -0.01em;
+    }
+
+    .app-logo svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .greeting-block h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #173E30;
+      letter-spacing: -0.02em;
+    }
+
+    .greeting-block p {
+      font-size: 13px;
+      color: var(--color-text-muted);
+      margin-top: 2px;
+    }
+
+    /* Simulated mini widgets */
+    .mock-widget {
+      background: #FFFFFF;
+      border: 1px solid #DCEAE2;
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 4px 14px -2px rgba(20, 87, 64, 0.04);
+    }
+
+    .mock-widget-header {
+      font-size: 14px;
+      font-weight: 700;
+      color: #173E30;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .mock-pills-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .mock-pill {
+      flex: 1;
+      background: #E3F5EC;
+      border-radius: 12px;
+      padding: 10px 8px;
+      text-align: center;
+      font-size: 11.5px;
+      color: #0C4B38;
+      font-weight: 600;
+    }
+
+    /* =========================================================================
+       PHẦN 1: THẺ VÀO (nằm dưới cùng trang "Hôm nay")
+       Thẻ rộng full, bo 28px, padding 20×22, nền gradient 135° #E3F5EC → #DFFAEC.
+       Góc trên phải có "túi" 96×80px, bo góc dưới-trái 64px, nền rgba(255,255,255,.45),
+       chứa icon lấp lánh (sparkles) màu #38B2AC.
+       - Tiêu đề "Nhìn lại tuần qua": 17px, đậm, màu #00694D.
+       - Mô tả 14px, màu xám xanh #5B7A6E, rộng tối đa 82%.
+       - Nút pill nền trắng, viền #D9EBE2, chữ "Xem hành trình" đậm #00694D kèm mũi tên →.
+       ========================================================================= */
+    .recap-entry-card {
+      position: relative;
+      width: 100%;
+      border-radius: 28px;
+      padding: 20px 22px;
+      background: linear-gradient(135deg, #E3F5EC 0%, #DFFAEC 100%);
+      overflow: hidden;
+      margin-top: auto;
+      transition: all 0.3s ease;
+    }
+
+    /* Trạng thái < 3 ngày: viền 1.5px dashed rgba(56,178,172,.6) */
+    .recap-entry-card.state-few-days {
+      border: 1.5px dashed rgba(56, 178, 172, 0.6);
+      box-shadow: none;
+    }
+
+    /* Trạng thái >= 3 ngày: viền liền #38B2AC + bóng xanh */
+    .recap-entry-card.state-ready {
+      border: 1.5px solid #38B2AC;
+      box-shadow: 0 10px 28px -6px rgba(56, 178, 172, 0.32);
+    }
+
+    /* Góc trên phải có "túi" 96×80px, bo góc dưới-trái 64px */
+    .recap-pocket {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 96px;
+      height: 80px;
+      border-bottom-left-radius: 64px;
+      background: rgba(255, 255, 255, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 8px;
+      padding-left: 12px;
+    }
+
+    .recap-pocket svg {
+      width: 32px;
+      height: 32px;
+      color: #38B2AC;
+    }
+
+    .recap-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #00694D;
+      letter-spacing: -0.01em;
+      margin-bottom: 6px;
+    }
+
+    .recap-desc {
+      font-size: 14px;
+      line-height: 1.45;
+      color: #5B7A6E;
+      max-width: 82%;
+      margin-bottom: 14px;
+    }
+
+    .recap-btn-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #FFFFFF;
+      border: 1px solid #D9EBE2;
+      border-radius: 999px;
+      padding: 9px 18px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      color: #00694D;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 105, 77, 0.08);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .recap-btn-pill:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 105, 77, 0.14);
+    }
+
+    .recap-btn-pill:active {
+      transform: scale(0.98);
+    }
+
+    .recap-prototype-link {
+      display: block;
+      margin-top: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #00694D;
+      text-decoration: underline;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: inherit;
+      opacity: 0.85;
+    }
+
+    .recap-prototype-link:hover {
+      opacity: 1;
+    }
+
+    /* =========================================================================
+       PHẦN 2: OVERLAY RECAP
+       - Phủ toàn màn hình khung app, nền #06150F.
+       - Thẻ story ở giữa: max-width 440px.
+       - Mobile: cao 100%. Web: cao min(100%, 720px), bo 26px.
+       - Thanh tiến độ: N đoạn (3px, bo tròn, gap 4px). 8 giây chạy linear.
+       - Tạm dừng khi giữ, chạm 32% trái = lùi, 68% phải = tiến.
+       ========================================================================= */
+    .recap-overlay {
+      position: absolute;
+      inset: 0;
+      background: var(--color-overlay-bg);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .recap-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .recap-modal {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .device-viewport.mode-web .recap-modal {
+      height: min(100%, 720px);
+      border-radius: 26px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Top progress bar */
+    .progress-bar-container {
+      display: flex;
+      gap: 4px;
+      padding: 14px 16px 0;
+      position: relative;
+      z-index: 25;
+    }
+
+    .device-viewport.mode-mobile .progress-bar-container {
+      padding-top: 50px; /* Chừa status bar mobile */
+    }
+
+    .progress-segment {
+      flex: 1;
+      height: 3px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.25);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: #FFFFFF;
+      border-radius: 999px;
+    }
+
+    /* Header bar below progress */
+    .recap-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 18px 0;
+      position: relative;
+      z-index: 25;
+    }
+
+    .recap-kicker-top {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .recap-close-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.15s ease;
+    }
+
+    .recap-close-btn:hover {
+      background: rgba(0, 0, 0, 0.35);
+      transform: scale(1.05);
+    }
+
+    /* Interactive Tap Zones: 32% Left & 68% Right */
+    .tap-zone-left {
+      position: absolute;
+      left: 0;
+      top: 90px;
+      bottom: 0;
+      width: 32%;
+      z-index: 10;
+      cursor: pointer;
+    }
+
+    .tap-zone-right {
+      position: absolute;
+      right: 0;
+      top: 90px;
+      bottom: 0;
+      width: 68%;
+      z-index: 10;
+      cursor: pointer;
+    }
+
+    /* Slides viewport */
+    .slides-container {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 24px 28px 36px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      color: #FFFFFF;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Slide Decorative Ornaments */
+    .slide-ornament-glow {
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 70%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .slide-ornament-ring {
+      position: absolute;
+      bottom: -60px;
+      left: -60px;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .slide-content {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
+    }
+
+    /* Typography scale */
+    .kicker {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      opacity: 0.85;
+    }
+
+    .title-large {
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1.22;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+
+    .title-hero {
+      font-size: 40px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: 12px;
+    }
+
+    .big-number-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin: 14px 0 16px;
+    }
+
+    .big-number {
+      font-size: 104px;
+      font-weight: 800;
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+    }
+
+    .big-number-unit {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      opacity: 0.88;
+    }
+
+    .body-text {
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1.6;
+      opacity: 0.92;
+      margin-top: 6px;
+    }
+
+    .note-text {
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.5;
+      opacity: 0.75;
+      margin-top: 14px;
+    }
+
+    /* Specific Slide Styles & Themes */
+    /* Slide 0: 160° #00694D → #06281E */
+    .theme-slide-0 {
+      background: linear-gradient(160deg, #00694D 0%, #06281E 100%);
+      color: #FFFFFF;
+    }
+
+    /* Slide 1: #E3F5EC → #BFEBD9, text #0C4B38 */
+    .theme-slide-1 {
+      background: linear-gradient(160deg, #E3F5EC 0%, #BFEBD9 100%);
+      color: #0C4B38;
+    }
+    .theme-slide-1 .slide-ornament-glow {
+      background: radial-gradient(circle, rgba(12, 75, 56, 0.08) 0%, transparent 70%);
+    }
+    .theme-slide-1 .slide-ornament-ring {
+      border-color: rgba(12, 75, 56, 0.14);
+    }
+    .theme-slide-1 .recap-kicker-top {
+      color: #0C4B38;
+    }
+
+    /* Days of week dots row (Slide 1) */
+    .week-dots-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      margin: 20px 0 16px;
+    }
+
+    .day-dot {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+
+    .day-dot.solid {
+      background: #0C4B38;
+      color: #FFFFFF;
+      box-shadow: 0 3px 10px rgba(12, 75, 56, 0.25);
+    }
+
+    .day-dot.dashed {
+      border: 1.5px dashed #5B7A6E;
+      background: transparent;
+      color: #5B7A6E;
+    }
+
+    /* Slide 2: #1F8A8A → #14525D */
+    .theme-slide-2 {
+      background: linear-gradient(160deg, #1F8A8A 0%, #14525D 100%);
+      color: #FFFFFF;
+    }
+
+    /* Bar chart 7 days */
+    .bar-chart-container {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      height: 120px;
+      gap: 8px;
+      margin: 24px 0 10px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+      position: relative;
+    }
+
+    .bar-col-item {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      position: relative;
+    }
+
+    .bar-col-fill {
+      width: 100%;
+      max-width: 28px;
+      border-radius: 6px 6px 0 0;
+      background: #FFFFFF;
+      transform-origin: bottom;
+      transition: all 0.3s ease;
+    }
+
+    .bar-col-fill.dim {
+      opacity: 0.35;
+    }
+
+    .bar-col-fill.highlight {
+      opacity: 1;
+      background: #EAFCF4;
+      box-shadow: 0 0 14px rgba(255, 255, 255, 0.5);
+    }
+
+    .bar-label {
+      position: absolute;
+      bottom: -22px;
+      font-size: 11px;
+      font-weight: 600;
+      opacity: 0.75;
+    }
+
+    /* Slide 3: #DFFAEC → #A9E6CB, text #0C4B38 */
+    .theme-slide-3 {
+      background: linear-gradient(160deg, #DFFAEC 0%, #A9E6CB 100%);
+      color: #0C4B38;
+    }
+    .theme-slide-3 .slide-ornament-glow {
+      background: radial-gradient(circle, rgba(12, 75, 56, 0.08) 0%, transparent 70%);
+    }
+    .theme-slide-3 .slide-ornament-ring {
+      border-color: rgba(12, 75, 56, 0.12);
+    }
+
+    .mood-headline {
+      font-size: 54px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin: 10px 0 18px;
+    }
+
+    /* Line chart SVG */
+    .line-chart-svg {
+      width: 100%;
+      height: 110px;
+      margin: 8px 0 14px;
+      overflow: visible;
+    }
+
+    /* Slide 4: #12352B → #081A14 */
+    .theme-slide-4 {
+      background: linear-gradient(160deg, #12352B 0%, #081A14 100%);
+      color: #FFFFFF;
+    }
+
+    .stress-stat-val {
+      font-size: 54px;
+      font-weight: 800;
+      color: #72E2B8;
+      margin: 6px 0 12px;
+    }
+
+    /* Slide 5: #00694D → #2A9A96 */
+    .theme-slide-5 {
+      background: linear-gradient(160deg, #00694D 0%, #2A9A96 100%);
+      color: #FFFFFF;
+    }
+
+    /* Slide 6: #F1FBF6 → #CFEFE0, text #0C4B38 */
+    .theme-slide-6 {
+      background: linear-gradient(160deg, #F1FBF6 0%, #CFEFE0 100%);
+      color: #0C4B38;
+    }
+    .theme-slide-6 .slide-ornament-glow {
+      background: radial-gradient(circle, rgba(12, 75, 56, 0.08) 0%, transparent 70%);
+    }
+    .theme-slide-6 .slide-ornament-ring {
+      border-color: rgba(12, 75, 56, 0.12);
+    }
+
+    /* 3 Photo Cards 3:4 */
+    .photo-grid-recap {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 22px 0 28px;
+    }
+
+    .photo-card-item {
+      aspect-ratio: 3 / 4;
+      border-radius: 18px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 20px -4px rgba(12, 75, 56, 0.16);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 10px;
+      color: #FFFFFF;
+    }
+
+    .photo-card-item:nth-child(1) {
+      background: linear-gradient(160deg, #2D8B68 0%, #17543E 100%);
+    }
+
+    .photo-card-item:nth-child(2) {
+      background: linear-gradient(160deg, #37A292 0%, #1F6E62 100%);
+      transform: translateY(22px); /* Thẻ giữa lệch xuống 22px */
+    }
+
+    .photo-card-item:nth-child(3) {
+      background: linear-gradient(160deg, #449B74 0%, #1E5C41 100%);
+    }
+
+    .photo-card-icon {
+      font-size: 20px;
+      margin-bottom: auto;
+      opacity: 0.85;
+    }
+
+    .photo-card-tag {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    /* Slide 7: End actions buttons */
+    .end-actions-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 32px;
+      position: relative;
+      z-index: 30; /* Nút nằm trên vùng chạm điều hướng */
+      pointer-events: auto;
+    }
+
+    .btn-pill-action {
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-pill-action.primary {
+      background: #FFFFFF;
+      color: #00694D;
+      border: none;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    }
+
+    .btn-pill-action.outline {
+      background: transparent;
+      color: #FFFFFF;
+      border: 1.5px solid #FFFFFF;
+    }
+
+    .btn-pill-action:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.05);
+    }
+
+    .btn-pill-action:active {
+      transform: scale(0.98);
+    }
+
+    /* Short recap specific styles */
+    .short-actions-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 26px;
+      position: relative;
+      z-index: 30;
+      pointer-events: auto;
+    }
+
+    /* =========================================================================
+       ANIMATIONS SPECIFICATION
+       - fade-up 0.6s, lệch nhau 0.12s
+       - pop scale 0.6 -> 1, 0.7s
+       - scaleY 0.8s, lệch 0.07s
+       - prefers-reduced-motion: hoàn toàn tắt animation
+       ========================================================================= */
+    @keyframes fadeUpAnim {
+      0% {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes popScaleAnim {
+      0% {
+        opacity: 0;
+        transform: scale(0.6);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes growBarAnim {
+      0% {
+        transform: scaleY(0);
+      }
+      100% {
+        transform: scaleY(1);
+      }
+    }
+
+    .slide.active .anim-fade-up {
+      opacity: 0;
+      animation: fadeUpAnim 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .slide.active .anim-pop {
+      opacity: 0;
+      animation: popScaleAnim 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    .slide.active .anim-grow {
+      transform: scaleY(0);
+      animation: growBarAnim 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Delays */
+    .slide.active .d-0 { animation-delay: 0.0s; }
+    .slide.active .d-1 { animation-delay: 0.12s; }
+    .slide.active .d-2 { animation-delay: 0.24s; }
+    .slide.active .d-3 { animation-delay: 0.36s; }
+    .slide.active .d-4 { animation-delay: 0.48s; }
+
+    /* Bar delays */
+    .slide.active .bar-d-0 { animation-delay: 0.0s; }
+    .slide.active .bar-d-1 { animation-delay: 0.07s; }
+    .slide.active .bar-d-2 { animation-delay: 0.14s; }
+    .slide.active .bar-d-3 { animation-delay: 0.21s; }
+    .slide.active .bar-d-4 { animation-delay: 0.28s; }
+    .slide.active .bar-d-5 { animation-delay: 0.35s; }
+    .slide.active .bar-d-6 { animation-delay: 0.42s; }
+
+    /* REDUCED MOTION */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+      }
+      .progress-fill {
+        transition: none !important;
+      }
+    }
+
+    body.reduce-motion-forced *, 
+    body.reduce-motion-forced *::before, 
+    body.reduce-motion-forced *::after {
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
+      opacity: 1 !important;
+    }
+
+    /* Selective Share Modal */
+    .share-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .share-modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .share-modal-box {
+      background: #FFFFFF;
+      border-radius: 24px;
+      padding: 22px;
+      max-width: 360px;
+      width: 100%;
+      color: #173E30;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .share-modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #00694D;
+      margin-bottom: 4px;
+    }
+
+    .share-item-check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 13.5px;
+      border-bottom: 1px solid #EEF5F1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Controller Switcher Bar -->
+  <div class="top-toolbar">
+    <span>Khung xem:</span>
+    <button id="btnMobile" class="active" onclick="setMode('mobile')">Mobile (390×790)</button>
+    <button id="btnWeb" onclick="setMode('web')">Web (1140×740)</button>
+
+    <div class="divider"></div>
+
+    <span>Dữ liệu:</span>
+    <button id="btnStateFull" class="active" onclick="setDaysData(5)">≥ 3 ngày (Đầy đủ)</button>
+    <button id="btnStateFew" onclick="setDaysData(2)">&lt; 3 ngày (Rút gọn)</button>
+
+    <div class="divider"></div>
+
+    <button id="btnReducedMotion" onclick="toggleReducedMotion()">Giảm chuyển động: Tắt</button>
+  </div>
+
+  <!-- Device Viewport Container -->
+  <div id="deviceViewport" class="device-viewport mode-mobile">
+
+    <!-- Screen "Hôm nay" (Simulated Home Screen) -->
+    <div class="screen-today">
+      <header class="app-header">
+        <div class="app-logo">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+          </svg>
+          MINDCARE
+        </div>
+        <div style="font-size: 13px; font-weight: 600; color: #5B7A6E;">Hôm nay</div>
+      </header>
+
+      <div class="greeting-block">
+        <h2>Chào buổi chiều bạn</h2>
+        <p>Thứ Bảy, 08/11/2026 · Hãy dành một nhịp thở cho riêng mình</p>
+      </div>
+
+      <!-- Mock Check-in preview widget -->
+      <div class="mock-widget">
+        <div class="mock-widget-header">
+          <span>Trạng thái hôm nay</span>
+          <span style="font-size: 12px; color: #00694D; font-weight: 600;">Đã check-in ✓</span>
+        </div>
+        <div class="mock-pills-row">
+          <div class="mock-pill">Tâm trạng <strong>7/10</strong></div>
+          <div class="mock-pill">Stress <strong>3/10</strong></div>
+          <div class="mock-pill">Ngủ <strong>7.8h</strong></div>
+        </div>
+      </div>
+
+      <!-- ===================================================================
+           PHẦN 1: THẺ VÀO (nằm dưới cùng trang "Hôm nay")
+           =================================================================== -->
+      <div id="recapEntryCard" class="recap-entry-card state-ready">
+        <!-- Túi 96×80px góc trên phải -->
+        <div class="recap-pocket" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 11.3l3-7 3 7 7 3-7 3-3 7-3-7-7-3 7-3zm-5.5 8.2l1.5-3.5 1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5zm13-13l1.5-3.5 1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5z"/>
+          </svg>
+        </div>
+
+        <div class="recap-title">Nhìn lại tuần qua</div>
+        <p id="recapDescText" class="recap-desc">
+          Tuần của bạn đã sẵn sàng. Có vài điều đáng nhớ đang chờ bạn.
+        </p>
+
+        <button id="recapMainBtn" class="recap-btn-pill" onclick="openRecap(false)">
+          <span>Xem hành trình</span>
+          <span>→</span>
+        </button>
+
+        <button id="recapPrototypeLink" class="recap-prototype-link" style="display:none;" onclick="openRecap(true)">
+          Xem bản mẫu đầy đủ (prototype)
+        </button>
+      </div>
+    </div>
+
+    <!-- ===================================================================
+         PHẦN 2: OVERLAY RECAP
+         =================================================================== -->
+    <div id="recapOverlay" class="recap-overlay">
+      <div class="recap-modal">
+
+        <!-- Top Progress Bars (N segments) -->
+        <div id="progressContainer" class="progress-bar-container"></div>
+
+        <!-- Header bar with title and close ✕ -->
+        <div class="recap-header-bar">
+          <span id="recapKickerTop" class="recap-kicker-top">Nhìn lại tuần qua</span>
+          <button class="recap-close-btn" onclick="closeRecap()" aria-label="Đóng">✕</button>
+        </div>
+
+        <!-- Left (32%) and Right (68%) Tap Zones -->
+        <div id="tapLeft" class="tap-zone-left" onclick="prevSlide()" title="Chạm bên trái để lùi"></div>
+        <div id="tapRight" class="tap-zone-right" onclick="nextSlide()" title="Chạm bên phải để tiến"></div>
+
+        <!-- Slides Viewport -->
+        <div id="slidesContainer" class="slides-container">
+
+          <!-- ===============================================================
+               8 SLIDES CHO BẢN ĐẦY ĐỦ (Dữ liệu tuần 2–8/11, 5/7 ngày)
+               =============================================================== -->
+          <!-- Slide 0: Chào đón -->
+          <div class="slide theme-slide-0" data-index="0">
+            <div class="slide-ornament-glow"></div>
+            <div class="slide-ornament-ring"></div>
+            <div class="slide-content">
+              <div class="kicker anim-fade-up d-0">✦ MindCare · Nhìn lại</div>
+              <h2 class="title-hero anim-fade-up d-1">Tuần của bạn</h2>
+              <div class="body-text anim-fade-up d-2" style="font-weight:600; opacity:0.95; margin-bottom: 8px;">2 – 8 tháng 11</div>
+              <p class="body-text anim-fade-up d-3">Một vài điều nhỏ đáng nhớ, chỉ dành cho bạn.</p>
+            </div>
+          </div>
+
+          <!-- Slide 1: Bạn đã ghé lại (5/7 ngày) -->
+          <div class="slide theme-slide-1" data-index="1">
+            <div class="slide-ornament-glow"></div>
+            <div class="slide-ornament-ring"></div>
+            <div class="slide-content">
+              <div class="kicker anim-fade-up d-0">Bạn đã ghé lại</div>
+              <div class="big-number-row anim-pop d-1">
+                <span class="big-number">5</span>
+                <span class="big-number-unit">/ 7 ngày</span>
+              </div>
+              <div class="week-dots-row anim-fade-up d-2">
+                <div class="day-dot solid">T2</div>
+                <div class="day-dot solid">T3</div>
+                <div class="day-dot solid">T4</div>
+                <div class="day-dot solid">T5</div>
+                <div class="day-dot dashed">T6</div>
+                <div class="day-dot solid">T7</div>
+                <div class="day-dot dashed">CN</div>
+              </div>
+              <p class="body-text anim-fade-up d-3">Mỗi lần quay lại đều giúp hành trình của bạn rõ hơn.</p>
+            </div>
+          </div>
+
+          <!-- Slide 2: Nhật ký (4 lần viết, 320 từ) -->
+          <div class="slide theme-slide-2" data-index="2">
+            <div class="slide-ornament-glow"></div>
+            <div class="slide-ornament-ring"></div>
+            <div class="slide-content">
+              <div class="kicker anim-fade-up d-0">Nhật ký</div>
+              <div class="big-number-row anim-pop d-1">
+                <span class="big-number">4</span>
+                <span class="big-number-unit">lần viết</span>
+              </div>
+              <p class="body-text anim-fade-up d-2">Khoảng 320 từ bạn đã gửi gắm. Thứ Năm là ngày bạn viết nhiều nhất.</p>
+
+              <!-- Biểu đồ cột 7 ngày [60,0,90,120,0,50,0] từ -->
+              <div class="bar-chart-container anim-fade-up d-3">
+                <div class="bar-col-item">
+                  <div class="bar-col-fill dim anim-grow bar-d-0" style="height: 50%;"></div>
+                  <span class="bar-label">T2</span>
+                </div>
+                <div class="bar-col-item">
+                  <div class="bar-col-fill dim anim-grow bar-d-1" style="height: 0%;"></div>
+                  <span class="bar-label">T3</span>
+                </div>
+                <div class="bar-col-item">
+                  <div class="bar-col-fill dim anim-grow bar-d-2" style="height: 75%;"></div>
+                  <span class="bar-label">T4</span>
+                </div>
+                <div class="bar-col-item">
+                  <div class="bar-col-fill highlight anim-grow bar-d-3" style="height: 100%;"></div>
+                  <span class="bar-label">T5</span>
+                </div>
+                <div class="bar-col-item">
+                  <div class="bar-col-fill dim anim-grow bar-d-4" style="height: 0%;"></div>
+                  <span class="bar-label">T6</span>
+                </div>
+                <div class="bar-col-item">
+                  <div class="bar-col-fill dim anim-grow bar-d-5" style="height: 42%;"></div>
+                  <span class="bar-label">T7</span>
+                </div>
+                <div class="bar-col-item">
+                  <div class="bar-col-fill dim anim-grow bar-d-6" style="height: 0%;"></div>
+                  <span class="bar-label">CN</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slide 3: Mood trung bình (Khá ổn, biểu đồ ngắt tại null) -->
+          <div class="slide theme-slide-3" data-index="3">
+            <div class="slide-ornament-glow"></div>
+            <div class="slide-ornament-ring"></div>
+            <div class="slide-content">
+              <div class="kicker anim-fade-up d-0">Mood trung bình</div>
+              <div class="mood-headline anim-pop d-1">🙂 Khá ổn</div>
+
+              <!-- Biểu đồ đường [3,4,3,4,null,5,null] cao 110px, null ngắt đường -->
+              <svg class="line-chart-svg anim-fade-up d-2" viewBox="0 0 320 110" fill="none">
+                <line x1="10" y1="20" x2="310" y2="20" stroke="rgba(12,75,56,0.15)" stroke-dasharray="3 3"/>
+                <line x1="10" y1="60" x2="310" y2="60" stroke="rgba(12,75,56,0.15)" stroke-dasharray="3 3"/>
+                <line x1="10" y1="100" x2="310" y2="100" stroke="rgba(12,75,56,0.15)" stroke-dasharray="3 3"/>
+
+                <!-- Segment 1: T2 -> T3 -> T4 -> T5: values [3, 4, 3, 4] -> y: 70, 50, 70, 50 -->
+                <path d="M 25 70 L 75 50 L 125 70 L 175 50" stroke="#0C4B38" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <!-- T6 is null -> gap! -->
+                <!-- T7 is 5 -> single point at x=275, y=30 -->
+
+                <!-- Dots on valid points -->
+                <circle cx="25" cy="70" r="4.5" fill="#0C4B38"/>
+                <circle cx="75" cy="50" r="4.5" fill="#0C4B38"/>
+                <circle cx="125" cy="70" r="4.5" fill="#0C4B38"/>
+                <circle cx="175" cy="50" r="4.5" fill="#0C4B38"/>
+                <!-- T7 dot -->
+                <circle cx="275" cy="30" r="6" fill="#0C4B38" stroke="#E3F5EC" stroke-width="2"/>
+
+                <!-- Day labels -->
+                <text x="25" y="108" fill="#0C4B38" font-size="10.5" font-weight="600" text-anchor="middle">T2</text>
+                <text x="75" y="108" fill="#0C4B38" font-size="10.5" font-weight="600" text-anchor="middle">T3</text>
+                <text x="125" y="108" fill="#0C4B38" font-size="10.5" font-weight="600" text-anchor="middle">T4</text>
+                <text x="175" y="108" fill="#0C4B38" font-size="10.5" font-weight="600" text-anchor="middle">T5</text>
+                <text x="225" y="108" fill="rgba(12,75,56,0.4)" font-size="10.5" font-weight="600" text-anchor="middle">T6</text>
+                <text x="275" y="108" fill="#0C4B38" font-size="10.5" font-weight="600" text-anchor="middle">T7</text>
+              </svg>
+
+              <p class="body-text anim-fade-up d-3">Ngày nhẹ lòng nhất của bạn là Thứ Bảy 😊</p>
+            </div>
+          </div>
+
+          <!-- Slide 4: Stress tuần này (Thấp hơn chút, ↓ 0,4) -->
+          <div class="slide theme-slide-4" data-index="4">
+            <div class="slide-ornament-glow"></div>
+            <div class="slide-ornament-ring"></div>
+            <div class="slide-content">
+              <div class="kicker anim-fade-up d-0">Stress tuần này</div>
+              <h2 class="title-large anim-fade-up d-1">Thấp hơn tuần trước một chút</h2>
+              <div class="stress-stat-val anim-pop d-2">↓ 0,4</div>
+
+              <!-- Biểu đồ đường stress [4,3,3,2,null,2,null] ngắt tại null -->
+              <svg class="line-chart-svg anim-fade-up d-3" viewBox="0 0 320 100" fill="none">
+                <line x1="10" y1="20" x2="310" y2="20" stroke="rgba(255,255,255,0.12)" stroke-dasharray="3 3"/>
+                <line x1="10" y1="50" x2="310" y2="50" stroke="rgba(255,255,255,0.12)" stroke-dasharray="3 3"/>
+                <line x1="10" y1="80" x2="310" y2="80" stroke="rgba(255,255,255,0.12)" stroke-dasharray="3 3"/>
+
+                <!-- Segment 1: T2 -> T3 -> T4 -> T5: values [4, 3, 3, 2] -> y: 30, 48, 48, 66 -->
+                <path d="M 25 30 L 75 48 L 125 48 L 175 66" stroke="#72E2B8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <!-- Gap at T6 -->
+                <!-- Point at T7: y=66 -->
+
+                <circle cx="25" cy="30" r="4.5" fill="#72E2B8"/>
+                <circle cx="75" cy="48" r="4.5" fill="#72E2B8"/>
+                <circle cx="125" cy="48" r="4.5" fill="#72E2B8"/>
+                <circle cx="175" cy="66" r="4.5" fill="#72E2B8"/>
+                <circle cx="275" cy="66" r="5" fill="#72E2B8" stroke="#12352B" stroke-width="2"/>
+
+                <text x="25" y="96" fill="rgba(255,255,255,0.7)" font-size="10.5" font-weight="600" text-anchor="middle">T2</text>
+                <text x="75" y="96" fill="rgba(255,255,255,0.7)" font-size="10.5" font-weight="600" text-anchor="middle">T3</text>
+                <text x="125" y="96" fill="rgba(255,255,255,0.7)" font-size="10.5" font-weight="600" text-anchor="middle">T4</text>
+                <text x="175" y="96" fill="rgba(255,255,255,0.7)" font-size="10.5" font-weight="600" text-anchor="middle">T5</text>
+                <text x="225" y="96" fill="rgba(255,255,255,0.3)" font-size="10.5" font-weight="600" text-anchor="middle">T6</text>
+                <text x="275" y="96" fill="rgba(255,255,255,0.7)" font-size="10.5" font-weight="600" text-anchor="middle">T7</text>
+              </svg>
+
+              <p class="note-text anim-fade-up d-4">Dựa trên 5/7 ngày có dữ liệu. Đây là số bạn tự báo cáo, không phải chẩn đoán.</p>
+            </div>
+          </div>
+
+          <!-- Slide 5: Điều giúp bạn dịu lại (Thở 4-6, 3 lần) -->
+          <div class="slide theme-slide-5" data-index="5">
+            <div class="slide-ornament-glow"></div>
+            <div class="slide-ornament-ring"></div>
+            <div class="slide-content">
+              <div class="kicker anim-fade-up d-0">Điều giúp bạn dịu lại</div>
+              <h2 class="title-large anim-fade-up d-1">Thở 4-6 thư giãn</h2>
+              <div class="big-number-row anim-pop d-2">
+                <span class="big-number">3</span>
+                <span class="big-number-unit">lần</span>
+              </div>
+              <p class="body-text anim-fade-up d-3">Bạn đã dành 6 phút cho hơi thở tuần này. Một khoảng nghỉ nhỏ cũng là chuẩn bị cho mình.</p>
+            </div>
+          </div>
+
+          <!-- Slide 6: Khoảnh khắc bạn giữ lại (3 ảnh 3:4) -->
+          <div class="slide theme-slide-6" data-index="6">
+            <div class="slide-ornament-glow"></div>
+            <div class="slide-ornament-ring"></div>
+            <div class="slide-content">
+              <div class="kicker anim-fade-up d-0">Khoảnh khắc bạn giữ lại</div>
+
+              <div class="photo-grid-recap anim-fade-up d-1">
+                <div class="photo-card-item">
+                  <span class="photo-card-icon">🌿</span>
+                  <div class="photo-card-tag">Tách trà ấm</div>
+                </div>
+                <div class="photo-card-item">
+                  <span class="photo-card-icon">☀️</span>
+                  <div class="photo-card-tag">Nắng sân trường</div>
+                </div>
+                <div class="photo-card-item">
+                  <span class="photo-card-icon">📖</span>
+                  <div class="photo-card-tag">Góc thư viện</div>
+                </div>
+              </div>
+
+              <p class="body-text anim-fade-up d-2" style="font-weight: 600;">Ba khoảnh khắc bạn yêu thích ♥ trong tuần.</p>
+            </div>
+          </div>
+
+          <!-- Slide 7: Lời cảm ơn & Kết thúc -->
+          <div class="slide theme-slide-0" data-index="7">
+            <div class="slide-ornament-glow"></div>
+            <div class="slide-ornament-ring"></div>
+            <div class="slide-content">
+              <div class="kicker anim-fade-up d-0">✦</div>
+              <h2 class="title-hero anim-fade-up d-1">Cảm ơn bạn đã dành thời gian cho mình</h2>
+              <p class="body-text anim-fade-up d-2">Tuần sau, chỉ cần quay lại một chút là đủ.</p>
+
+              <div class="end-actions-stack anim-fade-up d-3">
+                <button class="btn-pill-action primary" onclick="handleAction('progress')">Xem tiến triển</button>
+                <button class="btn-pill-action outline" onclick="openShareModal()">Chia sẻ có chọn lọc</button>
+                <button class="btn-pill-action outline" onclick="closeRecap()">Đóng</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===============================================================
+               RECAP RÚT GỌN (2 SLIDES) CHO KHI < 3 NGÀY DỮ LIỆU
+               =============================================================== -->
+          <!-- Short Slide 0 -->
+          <div class="slide theme-slide-0" data-short-index="0" style="display:none;">
+            <div class="slide-ornament-glow"></div>
+            <div class="slide-ornament-ring"></div>
+            <div class="slide-content">
+              <div class="kicker anim-fade-up d-0">✦ MindCare · Nhìn lại</div>
+              <h2 class="title-hero anim-fade-up d-1">Tuần này mới bắt đầu</h2>
+              <p class="body-text anim-fade-up d-2" style="margin-bottom: 12px;">Hiện có 2 ngày có dữ liệu.</p>
+
+              <div class="week-dots-row anim-fade-up d-3">
+                <div class="day-dot solid" style="background:#FFFFFF; color:#00694D;">T2</div>
+                <div class="day-dot solid" style="background:#FFFFFF; color:#00694D;">T3</div>
+                <div class="day-dot dashed" style="border-color: rgba(255,255,255,0.4); color: rgba(255,255,255,0.6);">T4</div>
+                <div class="day-dot dashed" style="border-color: rgba(255,255,255,0.4); color: rgba(255,255,255,0.6);">T5</div>
+                <div class="day-dot dashed" style="border-color: rgba(255,255,255,0.4); color: rgba(255,255,255,0.6);">T6</div>
+                <div class="day-dot dashed" style="border-color: rgba(255,255,255,0.4); color: rgba(255,255,255,0.6);">T7</div>
+                <div class="day-dot dashed" style="border-color: rgba(255,255,255,0.4); color: rgba(255,255,255,0.6);">CN</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Short Slide 1 -->
+          <div class="slide theme-slide-1" data-short-index="1" style="display:none;">
+            <div class="slide-ornament-glow"></div>
+            <div class="slide-ornament-ring"></div>
+            <div class="slide-content">
+              <div class="kicker anim-fade-up d-0">Gần rồi</div>
+              <h2 class="title-hero anim-fade-up d-1">Cần thêm vài ngày nữa</h2>
+              <p class="body-text anim-fade-up d-2">
+                Khi có ít nhất 3 ngày dữ liệu, mình sẽ gom lại thành một bản nhìn lại cho bạn. Bạn không cần làm tất cả mỗi ngày.
+              </p>
+
+              <div class="short-actions-row anim-fade-up d-3">
+                <button class="btn-pill-action primary" style="background:#0C4B38; color:#FFFFFF;" onclick="handleAction('checkin')">Check-in hôm nay</button>
+                <button class="btn-pill-action outline" style="border-color:#0C4B38; color:#0C4B38;" onclick="handleAction('journal')">Viết nhật ký</button>
+              </div>
+            </div>
+          </div>
+
+        </div> <!-- /.slides-container -->
+
+      </div> <!-- /.recap-modal -->
+    </div> <!-- /.recap-overlay -->
+
+    <!-- Modal Chia Sẻ Có Chọn Lọc -->
+    <div id="shareModal" class="share-modal-backdrop">
+      <div class="share-modal-box">
+        <h3 class="share-modal-title">Chia sẻ có chọn lọc</h3>
+        <p style="font-size: 12.5px; color: #5B7A6E; margin-bottom: 14px;">
+          Chọn thông tin bạn muốn chia sẻ với người thân hoặc lưu kỷ niệm riêng:
+        </p>
+
+        <label class="share-item-check">
+          <input type="checkbox" checked>
+          <span>Kỳ thống kê: Tuần 2 – 8 tháng 11</span>
+        </label>
+        <label class="share-item-check">
+          <input type="checkbox" checked>
+          <span>Số ngày ghé thăm (5/7 ngày)</span>
+        </label>
+        <label class="share-item-check">
+          <input type="checkbox" checked>
+          <span>Phút thở thư giãn (6 phút)</span>
+        </label>
+        <label class="share-item-check">
+          <input type="checkbox">
+          <span>Biểu đồ tâm trạng &amp; stress</span>
+        </label>
+
+        <div style="font-size: 11px; color: #5B7A6E; margin: 12px 0 16px;">
+          * Chia sẻ riêng tư, không đăng tải công khai lên mạng xã hội.
+        </div>
+
+        <div style="display:flex; gap: 8px;">
+          <button class="btn-pill-action outline" style="border-color:#D9EBE2; color:#5B7A6E; padding: 10px;" onclick="closeShareModal()">Đóng</button>
+          <button class="btn-pill-action primary" style="background:#00694D; color:#fff; padding: 10px;" onclick="confirmShare()">Gửi qua tin nhắn</button>
+        </div>
+      </div>
+    </div>
+
+  </div> <!-- /.device-viewport -->
+
+  <script>
+    // State management
+    let currentMode = 'mobile';
+    let dataDaysCount = 5; // Default >= 3
+    let isShortRecap = false;
+    let currentSlideIndex = 0;
+    let totalSlides = 8;
+    let isPaused = false;
+    let autoTimer = null;
+    let slideProgress = 0; // 0 to 100
+    let progressInterval = null;
+    let reducedMotionForced = false;
+    const SLIDE_DURATION_MS = 8000; // 8 seconds per slide
+    const STEP_MS = 40; // update frequency
+
+    const prefersReducedMotionMedia = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    function isMotionReduced() {
+      return reducedMotionForced || prefersReducedMotionMedia.matches;
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      const viewport = document.getElementById('deviceViewport');
+      document.getElementById('btnMobile').classList.toggle('active', mode === 'mobile');
+      document.getElementById('btnWeb').classList.toggle('active', mode === 'web');
+      viewport.className = `device-viewport mode-${mode}`;
+    }
+
+    function setDaysData(days) {
+      dataDaysCount = days;
+      const card = document.getElementById('recapEntryCard');
+      const desc = document.getElementById('recapDescText');
+      const protoLink = document.getElementById('recapPrototypeLink');
+      const btnStateFull = document.getElementById('btnStateFull');
+      const btnStateFew = document.getElementById('btnStateFew');
+
+      if (days >= 3) {
+        card.className = 'recap-entry-card state-ready';
+        desc.textContent = 'Tuần của bạn đã sẵn sàng. Có vài điều đáng nhớ đang chờ bạn.';
+        protoLink.style.display = 'none';
+        btnStateFull.classList.add('active');
+        btnStateFew.classList.remove('active');
+      } else {
+        card.className = 'recap-entry-card state-few-days';
+        desc.textContent = 'Chưa có đủ dữ liệu cho tuần này. Mỗi lần bạn quay lại đều giúp hành trình rõ hơn.';
+        protoLink.style.display = 'block';
+        btnStateFull.classList.remove('active');
+        btnStateFew.classList.add('active');
+      }
+    }
+
+    function toggleReducedMotion() {
+      reducedMotionForced = !reducedMotionForced;
+      document.body.classList.toggle('reduce-motion-forced', reducedMotionForced);
+      const btn = document.getElementById('btnReducedMotion');
+      btn.textContent = `Giảm chuyển động: ${reducedMotionForced ? 'Bật' : 'Tắt'}`;
+      btn.classList.toggle('active', reducedMotionForced);
+
+      if (reducedMotionForced) {
+        stopAutoAdvance();
+      } else if (document.getElementById('recapOverlay').classList.contains('open')) {
+        startProgressTimer();
+      }
+    }
+
+    // Build Progress Segments
+    function setupProgressBar() {
+      const container = document.getElementById('progressContainer');
+      container.innerHTML = '';
+      totalSlides = isShortRecap ? 2 : 8;
+
+      for (let i = 0; i < totalSlides; i++) {
+        const seg = document.createElement('div');
+        seg.className = 'progress-segment';
+        seg.innerHTML = '<div class="progress-fill"></div>';
+        container.appendChild(seg);
+      }
+      updateProgressBarDisplay();
+    }
+
+    function updateProgressBarDisplay() {
+      const container = document.getElementById('progressContainer');
+      const segments = container.querySelectorAll('.progress-segment');
+
+      segments.forEach((seg, i) => {
+        const fill = seg.querySelector('.progress-fill');
+        if (i < currentSlideIndex) {
+          fill.style.width = '100%';
+        } else if (i === currentSlideIndex) {
+          fill.style.width = `${slideProgress}%`;
+        } else {
+          fill.style.width = '0%';
+        }
+      });
+    }
+
+    // Open Recap Modal
+    function openRecap(forceFull = false) {
+      if (forceFull) {
+        isShortRecap = false;
+      } else {
+        isShortRecap = (dataDaysCount < 3);
+      }
+
+      currentSlideIndex = 0;
+      slideProgress = 0;
+
+      // Show/Hide appropriate slides in DOM
+      const allSlides = document.querySelectorAll('.slide');
+      allSlides.forEach(slide => {
+        const isShort = slide.hasAttribute('data-short-index');
+        if (isShortRecap) {
+          slide.style.display = isShort ? 'flex' : 'none';
+        } else {
+          slide.style.display = isShort ? 'none' : 'flex';
+        }
+        slide.classList.remove('active');
+      });
+
+      setupProgressBar();
+      showSlide(0);
+
+      document.getElementById('recapOverlay').classList.add('open');
+      startProgressTimer();
+    }
+
+    function closeRecap() {
+      stopAutoAdvance();
+      document.getElementById('recapOverlay').classList.remove('open');
+    }
+
+    function showSlide(index) {
+      currentSlideIndex = index;
+      slideProgress = 0;
+
+      const selector = isShortRecap 
+        ? `.slide[data-short-index="${index}"]` 
+        : `.slide[data-index="${index}"]`;
+
+      const allActive = document.querySelectorAll('.slide.active');
+      allActive.forEach(s => s.classList.remove('active'));
+
+      const target = document.querySelector(selector);
+      if (target) {
+        // Trigger reflow to restart CSS animations
+        void target.offsetWidth;
+        target.classList.add('active');
+      }
+
+      updateProgressBarDisplay();
+
+      // Ở slide cuối thì không tự chuyển nữa
+      if (currentSlideIndex === totalSlides - 1) {
+        stopAutoAdvance();
+        const container = document.getElementById('progressContainer');
+        const lastSegFill = container.children[currentSlideIndex]?.querySelector('.progress-fill');
+        if (lastSegFill) lastSegFill.style.width = '100%';
+      } else if (!isMotionReduced() && !isPaused) {
+        startProgressTimer();
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlideIndex < totalSlides - 1) {
+        showSlide(currentSlideIndex + 1);
+      } else {
+        closeRecap();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlideIndex > 0) {
+        showSlide(currentSlideIndex - 1);
+      }
+    }
+
+    // Auto advance timer and progress bar
+    function startProgressTimer() {
+      stopAutoAdvance();
+      if (isMotionReduced()) return; // Không tự chạy khi giảm chuyển động
+      if (currentSlideIndex >= totalSlides - 1) return; // Slide cuối không auto chuyển
+
+      const totalSteps = SLIDE_DURATION_MS / STEP_MS;
+      const stepIncrement = 100 / totalSteps;
+
+      progressInterval = setInterval(() => {
+        if (!isPaused) {
+          slideProgress += stepIncrement;
+          if (slideProgress >= 100) {
+            slideProgress = 100;
+            updateProgressBarDisplay();
+            nextSlide();
+          } else {
+            updateProgressBarDisplay();
+          }
+        }
+      }, STEP_MS);
+    }
+
+    function stopAutoAdvance() {
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+      }
+    }
+
+    // Pause on Hold (Giữ ngón tay hoặc chuột thì tạm dừng)
+    const overlayElem = document.getElementById('recapOverlay');
+
+    function onPointerDown(e) {
+      // Don't pause if clicking on interactive buttons
+      if (e.target.closest('button')) return;
+      isPaused = true;
+    }
+
+    function onPointerUp(e) {
+      isPaused = false;
+    }
+
+    overlayElem.addEventListener('mousedown', onPointerDown);
+    overlayElem.addEventListener('mouseup', onPointerUp);
+    overlayElem.addEventListener('touchstart', onPointerDown, { passive: true });
+    overlayElem.addEventListener('touchend', onPointerUp, { passive: true });
+
+    // Keyboard navigation (← → và Esc)
+    window.addEventListener('keydown', (e) => {
+      const isOpen = document.getElementById('recapOverlay').classList.contains('open');
+      if (!isOpen) return;
+
+      if (e.key === 'ArrowRight') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        prevSlide();
+      } else if (e.key === 'Escape') {
+        closeRecap();
+        closeShareModal();
+      }
+    });
+
+    // Selective Sharing Modal
+    function openShareModal() {
+      isPaused = true;
+      document.getElementById('shareModal').classList.add('open');
+    }
+
+    function closeShareModal() {
+      isPaused = false;
+      document.getElementById('shareModal').classList.remove('open');
+    }
+
+    function confirmShare() {
+      alert('Đã tạo ảnh tóm tắt để bạn chia sẻ riêng tư với người thân tin cậy.');
+      closeShareModal();
+    }
+
+    function handleAction(action) {
+      if (action === 'progress') {
+        alert('Chuyển tới màn hình Thống kê chi tiết.');
+      } else if (action === 'checkin') {
+        alert('Mở phiếu Check-in cảm xúc hôm nay.');
+      } else if (action === 'journal') {
+        alert('Mở trang Viết nhật ký.');
+      }
+      closeRecap();
+    }
+  </script>
+</body>
+</html>

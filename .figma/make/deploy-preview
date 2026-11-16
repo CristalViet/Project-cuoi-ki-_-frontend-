@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+(
+  cd MindCare--main
+  npm run build
+)
+
+[[ -d "MindCare--main/dist" ]] || {
+  echo "Expected build output at MindCare--main/dist" >&2
+  exit 1
+}
+
+figma make deploy-preview --build-dir "MindCare--main/dist"

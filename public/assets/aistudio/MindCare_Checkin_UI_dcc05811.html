@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MindCare · Check-in cảm xúc</title>
+<style>
+:root{
+  --ink:#24492f; --green:#2f6b3f; --green-d:#285f38; --green-l:#5a9e65;
+  --mint:#eaf4df; --cream:#fdf8ef; --line:#ebe6d8; --muted:#74806f;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font:15px/1.4 "Nunito","Segoe UI",system-ui,-apple-system,sans-serif;color:var(--ink);
+  background:radial-gradient(circle at 95% 0,#eef4dc 0 130px,transparent 131px),radial-gradient(circle at 0 100%,#eaf3d8 0 110px,transparent 111px),#fbf8f1;
+  min-height:100vh}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+button:focus-visible,textarea:focus-visible{outline:3px solid #87b898;outline-offset:2px}
+.stage{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;padding:40px 20px}
+.phone{width:372px;height:800px;flex:none;position:relative;border-radius:46px;overflow:hidden;
+  background:radial-gradient(circle at 105% 12%,#e8f2d6 0 70px,transparent 71px),radial-gradient(circle at -8% 45%,#fbebd2 0 50px,transparent 51px),linear-gradient(#fffaf2,#fbf3e6);
+  border:7px solid #fff;box-shadow:0 0 0 1px #e9e4d6,0 24px 50px #4a5a3a22,inset 0 0 30px #fff}
+.phone:before{content:"";position:absolute;right:-60px;bottom:90px;width:180px;height:180px;border-radius:50%;background:#eef5de;z-index:0}
+.phone:after{content:"";position:absolute;left:-40px;bottom:-60px;width:260px;height:130px;border-radius:50%;background:#e6f0d3;opacity:.7;z-index:0}
+.status{display:flex;justify-content:space-between;align-items:center;padding:14px 26px 0;font-weight:800;font-size:14px;position:relative;z-index:2}
+.status .icons{display:flex;gap:6px;align-items:center}
+.bar-top{display:flex;align-items:center;justify-content:center;position:relative;margin:12px 20px 0;height:40px;z-index:2}
+.back{position:absolute;left:0;width:38px;height:38px;border-radius:50%;background:#fff;box-shadow:0 2px 8px #3a4a2a1a;display:grid;place-items:center}
+.brand{display:flex;gap:7px;align-items:center;font-weight:800;font-size:20px;color:#2b6a3d}
+.steps{display:flex;justify-content:space-between;margin:14px 22px 0;font-weight:800;font-size:15px;position:relative;z-index:2}
+.steps span:last-child{font-weight:600;color:#6f7d6c}
+.prog{display:flex;gap:6px;margin:8px 22px 0;position:relative;z-index:2}
+.prog i{flex:1;height:6px;border-radius:9px;background:#e4e0cf}
+.prog i.on{background:linear-gradient(90deg,#2f6b3f,#3d8250)}
+.body{position:absolute;left:0;right:0;top:152px;bottom:96px;padding:0 22px;z-index:2;overflow:hidden}
+.foot{position:absolute;left:0;right:0;bottom:0;padding:0 18px 26px;display:flex;gap:10px;z-index:3}
+.btn{flex:1;height:52px;border-radius:99px;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center;gap:9px;transition:transform .15s,filter .15s}
+.btn:active{transform:scale(.97)}
+.btn:hover{filter:brightness(1.05)}
+.btn.p{background:linear-gradient(180deg,#3a7a4b,#2a5f38);color:#fff;box-shadow:0 6px 14px #2a5f3833,inset 0 1px 0 #ffffff33}
+.btn.s{background:#fffdf8;border:1.5px solid #cfd8c4;color:#2a5f38;flex:.62}
+h1{font-size:30px;line-height:1.12;letter-spacing:-.6px;margin:8px 0 6px;color:#23482e;font-weight:900}
+h2{font-size:23px;margin:0;letter-spacing:-.3px;font-weight:900;color:#23482e}
+.date{display:flex;align-items:center;gap:8px;font-size:13px;color:#4d6a54;margin-top:16px}
+
+/* screen 1 */
+.hero{position:relative;width:250px;height:250px;margin:6px auto 0}
+.hero .glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#c6e8ad 0 38%,#d8efc4 39% 62%,#e8f3da 63% 100%)}
+.hero svg.m{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%)}
+.spark{position:absolute;right:-6px;top:-4px}
+.spark2{position:absolute;left:0;bottom:6px}
+.mood-title{display:flex;align-items:center;justify-content:center;gap:12px;font-size:32px;font-weight:900;margin-top:2px;color:#23482e}
+.mood-title svg{opacity:.9}
+.mood-sub{text-align:center;color:#5d6e60;font-size:15px;margin-top:2px}
+.moods{display:flex;justify-content:space-between;margin-top:20px;padding:0 2px}
+.mood{display:flex;flex-direction:column;align-items:center;gap:6px;width:60px;font-size:12px;color:#4d5f52;font-weight:600;text-align:center;line-height:1.1}
+.mood .f{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;transition:transform .15s;box-shadow:0 2px 6px #3a4a2a14}
+.mood .f svg{width:100%;height:100%}
+.mood.sel .f{box-shadow:0 0 0 3px #fffaf2,0 0 0 5px #2f6b3f;transform:scale(1.05)}
+.mood.sel{color:#23482e;font-weight:900}
+
+/* screen 2 */
+.row{display:flex;align-items:center;justify-content:space-between;margin-top:18px}
+.badge{padding:6px 14px;border-radius:99px;font-weight:800;font-size:13px;background:#eaf3dc;color:#3f7a4a}
+.badge.hi{background:#fde6d8;color:#d2602c}
+.badge.mid{background:#fdf0cc;color:#a77a12}
+.card{background:#ffffffe6;border:1px solid #efe9db;border-radius:22px;box-shadow:0 6px 18px #4a5a3a0f;position:relative}
+.stress{margin-top:12px;padding:14px 16px 12px;height:210px;overflow:hidden}
+.big{font-size:64px;font-weight:900;line-height:1;letter-spacing:-2px;color:#24492f}
+.big small{font-size:23px;font-weight:700;color:#6f7d6c;letter-spacing:0}
+.sbars{display:flex;gap:5px;align-items:flex-end;height:86px;position:absolute;left:16px;right:16px;bottom:38px}
+.sb{flex:1;border-radius:8px 8px 5px 5px;min-width:0;transition:background .15s}
+.sb.act{outline:2.5px solid #2a4a30;outline-offset:2px}
+.ends{position:absolute;left:16px;right:16px;bottom:12px;display:flex;justify-content:space-between;font-size:12px;color:#6f7d6c}
+.peek{position:absolute;right:14px;top:6px;width:90px}
+.sleep{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.opt{height:68px;border-radius:18px;background:#ffffffd9;border:1px solid #ece7d8;padding:0 14px;display:flex;align-items:center;gap:11px;text-align:left;position:relative;transition:.15s}
+.opt .mo{width:34px;height:34px;border-radius:50%;background:#e9f2dc;display:grid;place-items:center;flex:none}
+.opt b{display:block;font-size:19px;line-height:1.1}
+.opt small{font-size:13px;color:#6f7d6c}
+.opt.sel{background:linear-gradient(180deg,#336f45,#275836);color:#fff;border-color:#275836}
+.opt.sel .mo{background:#ffffff26}
+.opt.sel small{color:#d8ecd9}
+.opt .tick{position:absolute;right:11px;top:50%;transform:translateY(-50%);width:24px;height:24px;border-radius:50%;background:#fff;display:grid;place-items:center}
+.zz{position:absolute;left:0;right:0;bottom:-6px;height:110px}
+
+/* screen 3 */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;width:78%}
+.chip{display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:99px;background:#fff;border:1px solid #e8e3d3;font-size:13px;font-weight:700}
+.chip i{width:10px;height:10px;border-radius:50%}
+.peek3{position:absolute;right:6px;top:78px;width:84px;height:58px;overflow:hidden;z-index:1}
+.editor{position:relative;z-index:2;display:block;width:100%;height:150px;margin-top:16px;border:1px solid #e9e3d3;border-radius:20px;background:#fffefb;padding:14px 16px;font:inherit;font-size:15px;color:#24492f;resize:none;line-height:1.5}
+.editor::placeholder{color:#7f8b7b}
+.cnt{text-align:right;font-size:12px;color:#7d897a;margin-top:3px}
+.hint{font-size:13px;color:#53655a;margin:8px 0 8px 6px}
+.prompts{display:flex;flex-direction:column;align-items:flex-start;gap:9px}
+.pr{display:flex;align-items:center;gap:9px;background:#e8f2da;border-radius:99px;padding:7px 15px 7px 11px;font-weight:800;font-size:14px;transition:.15s}
+.pr:hover{background:#dcebc9}
+.ai{margin-top:14px;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:20px;background:#fff;border:1px solid #ece7d8;box-shadow:0 4px 12px #4a5a3a0d}
+.ai .ic{width:38px;height:38px;border-radius:50%;background:#e9f2dc;display:grid;place-items:center;flex:none}
+.ai b{display:block;font-size:15px}
+.ai small{font-size:12px;color:#6f7d6c;line-height:1.25;display:block}
+.tg{width:52px;height:30px;border-radius:99px;background:#d6d9cd;position:relative;flex:none;transition:.2s}
+.tg:after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 4px #0003;transition:.2s}
+.tg.on{background:#2f7a48}
+.tg.on:after{left:25px}
+
+/* screen 4 */
+.done{text-align:center}
+.done .hero4{position:relative;width:260px;height:230px;margin:26px auto 0}
+.done .blob{position:absolute;inset:14px 6px 0 6px;border-radius:55% 45% 50% 50%/55% 50% 50% 45%;background:#f3f1df}
+.done h1{font-size:36px;margin:8px 0 12px}
+.done p{color:#4f6354;font-size:15px;line-height:1.4}
+.stats{display:flex;gap:9px;margin-top:22px}
+.stat{flex:1;border-radius:18px;background:#f1f6e5;padding:14px 4px 12px;font-size:12px;color:#4f6354}
+.stat:nth-child(2){background:#fdf0df}
+.stat svg{display:block;margin:0 auto 6px}
+.stat b{display:block;font-size:17px;color:#24492f;margin-top:3px}
+.done-foot{position:absolute;left:0;right:0;bottom:0;padding:0 18px 32px;z-index:3;display:flex;flex-direction:column;gap:10px}
+.btn.o{background:#fffdf8;border:1.5px solid #2f6b3f;color:#2a5f38}
+@media(max-width:420px){.stage{padding:16px 8px}.phone{width:100%;max-width:372px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone" id="p0"></div>
+  <div class="phone" id="p1"></div>
+  <div class="phone" id="p2"></div>
+  <div class="phone" id="p3"></div>
+</div>
+
+<script>
+const S={mood:3,stress:8,sleep:2,note:'',ai:true};
+const $=id=>document.getElementById(id);
+
+/* ---------- icons ---------- */
+const leafIc=(s=20,c='#2b6a3d')=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20c0-9 5-15 15-15 0 10-6 15-15 15z"/><path d="M5 20c3-5 6-8 10-10"/></svg>`;
+const moonIc=(c='#2f6b3f',s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>`;
+const arrowR=`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+const arrowL=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#24492f" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>`;
+const check=(c='#2a5f38',s=14)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>`;
+const sparkLines=(rot=0)=>`<svg width="40" height="40" viewBox="0 0 40 40" style="transform:rotate(${rot}deg)" fill="none" stroke="#a6c85c" stroke-width="3.2" stroke-linecap="round"><path d="M10 28l-1 7M18 20l8 -2M20 10l5 -5" transform="translate(4 2)"/></svg>`;
+const dashes=(flip)=>`<svg width="34" height="22" viewBox="0 0 34 22" fill="none" stroke="#a7c95e" stroke-width="3.2" stroke-linecap="round" style="${flip?'transform:scaleX(-1)':''}"><path d="M3 4l9 5M4 17l7-1M16 2l3 8"/></svg>`;
+const statusBar=`<div class="status"><span>9:41</span><span class="icons">
+<svg width="18" height="12" viewBox="0 0 18 12" fill="#1f2d22"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+<svg width="17" height="12" viewBox="0 0 24 18" fill="none" stroke="#1f2d22" stroke-width="2.6" stroke-linecap="round"><path d="M2 6a15 15 0 0 1 20 0M6 10.5a9 9 0 0 1 12 0"/><circle cx="12" cy="15" r="1.6" fill="#1f2d22"/></svg>
+<svg width="26" height="13" viewBox="0 0 26 13"><rect x=".5" y=".5" width="21" height="12" rx="3.5" fill="none" stroke="#1f2d22" opacity=".5"/><rect x="2" y="2" width="18" height="9" rx="2.2" fill="#1f2d22"/><rect x="23" y="4" width="2" height="5" rx="1" fill="#1f2d22" opacity=".5"/></svg></span></div>`;
+
+/* ---------- mascot (original sprout blob) ---------- */
+let uid=0;
+function mascot({w=150,mouth='smile',heart=false,cls='m',leafSway=0}={}){
+  const id='g'+(uid++);
+  const eyes = mouth==='sleep'
+    ? `<path d="M70 108q8 7 16 0M114 108q8 7 16 0" stroke="#26412d" stroke-width="4" fill="none" stroke-linecap="round"/>`
+    : mouth==='happy'
+    ? `<path d="M70 110q8-10 16 0M114 110q8-10 16 0" stroke="#26412d" stroke-width="4" fill="none" stroke-linecap="round"/>`
+    : `<circle cx="78" cy="106" r="6" fill="#26412d"/><circle cx="122" cy="106" r="6" fill="#26412d"/>`;
+  const m = mouth==='happy'
+    ? `<path d="M90 120q10 12 20 0" stroke="#26412d" stroke-width="4" fill="none" stroke-linecap="round"/>`
+    : mouth==='sleep'
+    ? `<path d="M94 122q6 5 12 0" stroke="#26412d" stroke-width="3.5" fill="none" stroke-linecap="round"/>`
+    : `<path d="M88 118q12 13 24 0" stroke="#26412d" stroke-width="4.2" fill="none" stroke-linecap="round"/>`;
+  const h = heart?`<path d="M100 172C72 152 66 130 84 128c9-1 16 7 16 7s7-8 16-7c18 2 12 24-16 44z" fill="#f08aa0" stroke="#e46d89" stroke-width="3" stroke-linejoin="round"/><path d="M82 138q4-5 9-3" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none" opacity=".7"/>`:'';
+  return `<svg class="${cls}" width="${w}" height="${w*0.85}" viewBox="0 0 200 170" aria-hidden="true">
+  <defs><radialGradient id="${id}" cx="40%" cy="30%" r="80%"><stop offset="0" stop-color="#f7fbe0"/><stop offset=".55" stop-color="#dbeeb0"/><stop offset="1" stop-color="#b7dc84"/></radialGradient></defs>
+  <ellipse cx="100" cy="163" rx="62" ry="6" fill="#4f8a45" opacity=".12"/>
+  <path d="M100 52 C100 40 102 34 106 28" stroke="#4f8a45" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M106 30 C112 6 140 2 156 12 C150 34 126 40 106 30z" fill="#9bd06e" stroke="#4f8a45" stroke-width="4" stroke-linejoin="round" transform="rotate(${leafSway} 106 30)"/>
+  <path d="M104 32 C96 12 72 8 56 18 C60 38 84 44 104 32z" fill="#b5df84" stroke="#4f8a45" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M110 28q16-2 30-6" stroke="#4f8a45" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".6"/>
+  <path d="M28 142 C14 92 56 52 100 52 C144 52 186 92 172 142 C168 162 140 168 100 168 C60 168 32 162 28 142z" fill="url(#${id})" stroke="#4f8a45" stroke-width="4.5" stroke-linejoin="round"/>
+  <ellipse cx="62" cy="78" rx="16" ry="9" fill="#fff" opacity=".45" transform="rotate(-25 62 78)"/>
+  ${eyes}
+  <ellipse cx="60" cy="122" rx="12" ry="8" fill="#f6a5a5" opacity=".75"/><ellipse cx="140" cy="122" rx="12" ry="8" fill="#f6a5a5" opacity=".75"/>
+  ${m}${h}</svg>`;
+}
+
+/* ---------- mood faces ---------- */
+const MOODS=[
+ {n:'Rất tệ',c:'#d8cdf1',sub:'Hôm nay có vẻ thật khó khăn'},
+ {n:'Không ổn',c:'#bcd6f5',sub:'Cảm ơn bạn đã chia sẻ điều này'},
+ {n:'Bình thường',c:'#f8e58c',sub:'Một ngày bình thường cũng đáng ghi nhận'},
+ {n:'Khá ổn',c:'#c4e69e',sub:'Một ngày khá dễ chịu'},
+ {n:'Tuyệt vời',c:'#f9a95a',sub:'Thật vui khi có điều tích cực hôm nay'}];
+function face(i){
+  const c=MOODS[i].c, d='#4a3d2b';
+  const eyes=[
+   `<path d="M11 15l5 1.5M29 15l-5 1.5" stroke="${d}" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="19" r="1.6" fill="${d}"/><circle cx="26" cy="19" r="1.6" fill="${d}"/>`,
+   `<circle cx="14" cy="18" r="1.7" fill="${d}"/><circle cx="26" cy="18" r="1.7" fill="${d}"/>`,
+   `<circle cx="14" cy="18" r="1.7" fill="${d}"/><circle cx="26" cy="18" r="1.7" fill="${d}"/>`,
+   `<circle cx="14" cy="18" r="1.8" fill="#2f4a2f"/><circle cx="26" cy="18" r="1.8" fill="#2f4a2f"/>`,
+   `<path d="M10.5 18q3.5-4 7 0M22.5 18q3.5-4 7 0" stroke="${d}" stroke-width="2" fill="none" stroke-linecap="round"/>`][i];
+  const mouth=[
+   `<path d="M14 29q6-6 12 0" stroke="${d}" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+   `<path d="M15 28.5q5-3.5 10 0" stroke="${d}" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+   `<path d="M15 27h10" stroke="${d}" stroke-width="2" stroke-linecap="round"/>`,
+   `<path d="M14 25q6 6 12 0" stroke="#2f4a2f" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+   `<path d="M13 24h14q-1 8-7 8t-7-8z" fill="#fff" stroke="${d}" stroke-width="1.8" stroke-linejoin="round"/>`][i];
+  const ch=i>=3?`<circle cx="9.5" cy="24" r="2.5" fill="#f6a5a5" opacity=".7"/><circle cx="30.5" cy="24" r="2.5" fill="#f6a5a5" opacity=".7"/>`:'';
+  return `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="20" fill="${c}"/>${eyes}${mouth}${ch}</svg>`;
+}
+
+/* ---------- helpers ---------- */
+const SLEEP=[['< 6h','Ngủ ít'],['6–7h','Tạm ổn'],['7–8h','Đủ giấc'],['8h+','Ngủ sâu']];
+const DOW=['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+const dt=new Date();
+const dateStr=`${DOW[dt.getDay()]}, ${dt.getDate()} tháng ${dt.getMonth()+1}`;
+const stressInfo=()=>S.stress<=3?['Thư giãn','']:S.stress<=6?['Căng vừa','mid']:['Khá căng','hi'];
+const header=(step,back=true)=>`${statusBar}<div class="bar-top">${back?`<button class="back" data-go="${step-1}" aria-label="Quay lại">${arrowL}</button>`:''}<div class="brand">${leafIc(22)} MindCare</div></div>
+<div class="steps"><span>Check-in cảm xúc</span><span>Bước ${step+1}/3</span></div>
+<div class="prog">${[0,1,2].map(i=>`<i class="${i<=step?'on':''}"></i>`).join('')}</div>`;
+const barColor=i=>`hsl(${108-i*8.2},${52+i*2}%,${60-i*0.8}%)`;
+
+/* ---------- screens ---------- */
+function screen0(){
+  const m=MOODS[S.mood], mo=['sad','sad','smile','smile','happy'][S.mood];
+  return header(0,false)+`<div class="body">
+  <div class="date"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4d6a54" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>${dateStr}</div>
+  <h1>Hôm nay bạn cảm<br>thấy thế nào?</h1>
+  <div class="hero"><div class="glow"></div><span class="spark">${dashes(false)}</span><span class="spark2">${dashes(true)}</span>
+   ${mascot({w:190,mouth:S.mood===4?'happy':'smile',cls:'m'})}</div>
+  <div class="mood-title">${dashes(false)}<span>${m.n}</span>${dashes(true)}</div>
+  <div class="mood-sub">${m.sub}</div>
+  <div class="moods" role="group" aria-label="Chọn tâm trạng">${MOODS.map((x,i)=>`<button class="mood ${i===S.mood?'sel':''}" data-mood="${i}" aria-pressed="${i===S.mood}"><span class="f">${face(i)}</span>${x.n.replace('Bình thường','Bình<br>thường')}</button>`).join('')}</div>
+  </div><div class="foot"><button class="btn p" data-go="1">Tiếp tục ${arrowR}</button></div>`;
+}
+function screen1(){
+  const [lbl,cls]=stressInfo();
+  return header(1)+`<div class="body">
+  <div class="row"><h2>Mức căng thẳng</h2><span class="badge ${cls}">${lbl}</span></div>
+  <div class="card stress">
+   <div class="big">${S.stress}<small>/10</small></div>
+   <div class="peek">${mascot({w:90,mouth:'smile',cls:'',leafSway:8})}</div>
+   <div class="sbars" role="group" aria-label="Chọn mức căng thẳng">${Array.from({length:11},(_,i)=>{
+     const h=14+i*6.6, on=i<=S.stress;
+     return `<button class="sb ${i===S.stress?'act':''}" data-stress="${i}" aria-label="${i} trên 10" aria-pressed="${i===S.stress}" style="height:${h}px;background:${on?barColor(i):'#eae4d3'}"></button>`}).join('')}</div>
+   <div class="ends"><span>0 · Thư thả</span><span>10 · Rất căng</span></div>
+  </div>
+  <h2 style="margin-top:22px;font-size:22px">Giấc ngủ đêm qua</h2>
+  <div class="sleep">${SLEEP.map((s,i)=>`<button class="opt ${i===S.sleep?'sel':''}" data-sleep="${i}" aria-pressed="${i===S.sleep}"><span class="mo">${moonIc(i===S.sleep?'#fff':'#2f6b3f')}</span><span><b>${s[0]}</b><small>${s[1]}</small></span>${i===S.sleep?`<span class="tick">${check()}</span>`:''}</button>`).join('')}</div>
+  <div class="zz"><svg width="372" height="110" viewBox="0 0 372 110" style="position:absolute;left:-22px;bottom:0"><path d="M0 110V92q60-26 120-8t110-12q60 6 142 22v16z" fill="#e1eed0"/></svg>
+   <div style="position:absolute;left:60%;bottom:12px;transform:translateX(-50%)">${mascot({w:96,mouth:'sleep',cls:''})}</div>
+   <span style="position:absolute;left:73%;bottom:62px;font-weight:900;color:#5b8f6a;font-size:15px">z<span style="font-size:11px">z</span></span></div>
+  </div><div class="foot"><button class="btn s" data-go="0">Quay lại</button><button class="btn p" data-go="2">Tiếp tục ${arrowR}</button></div>`;
+}
+function screen2(){
+  const [lbl]=stressInfo();
+  const dot=S.stress<=3?'#7fbf6a':S.stress<=6?'#e5b53c':'#f28a43';
+  return header(2)+`<div class="body">
+  <h1 style="margin-top:2px">Bạn muốn ghi lại điều<br>gì hôm nay?</h1>
+  <div class="chips"><span class="chip"><i style="background:#8cd078"></i>${MOODS[S.mood].n}</span><span class="chip"><i style="background:${dot}"></i>Căng thẳng ${S.stress}/10</span><span class="chip">${moonIc('#2f6b3f',14)}Ngủ ${SLEEP[S.sleep][0]}</span></div>
+  <div class="peek3"><div style="position:absolute;left:4px;top:6px">${mascot({w:74,mouth:'smile',cls:''})}</div></div>
+  <textarea class="editor" id="journal" maxlength="500" placeholder="Viết vài dòng về cảm xúc, suy nghĩ hoặc điều khiến bạn bận tâm hôm nay...">${S.note.replace(/</g,'&lt;')}</textarea>
+  <div class="cnt"><span id="cc">${S.note.length}</span>/500</div>
+  <div class="hint">Gợi ý để bắt đầu</div>
+  <div class="prompts">
+   <button class="pr" data-text="Hôm nay mình biết ơn ">${leafIc(16)} Điều mình biết ơn</button>
+   <button class="pr" data-text="Điều làm mình bận tâm là ">${leafIc(16)} Điều làm mình bận tâm</button>
+   <button class="pr" data-text="Một niềm vui nhỏ hôm nay là ">${leafIc(16)} Một niềm vui nhỏ</button></div>
+  <div class="ai"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3f7a4a" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"/></svg></span>
+   <span style="flex:1"><b>Nhận gợi ý từ AI</b><small>Lời nhắc nhẹ nhàng dựa trên check-in hôm nay</small></span>
+   <button class="tg ${S.ai?'on':''}" data-ai="1" role="switch" aria-checked="${S.ai}" aria-label="Nhận gợi ý từ AI"></button></div>
+  </div><div class="foot"><button class="btn s" data-go="1">Quay lại</button><button class="btn p" data-go="3">${check('#fff',18)} Hoàn tất</button></div>`;
+}
+function screen3(){
+  return statusBar+`<div class="bar-top"><div class="brand">${leafIc(22)} MindCare</div></div>
+  <div class="body done" style="top:76px">
+   <div class="hero4"><div class="blob"></div>
+    <svg width="40" height="36" viewBox="0 0 40 36" style="position:absolute;left:8px;top:40px"><path d="M20 33C6 22 2 14 7 8c5-5 11-1 13 3 2-4 8-8 13-3 5 6 1 14-13 25z" fill="none" stroke="#f08aa0" stroke-width="3" stroke-linejoin="round" transform="rotate(-14 20 20)"/></svg>
+    <span style="position:absolute;right:6px;top:46px">${dashes(true)}</span>
+    <div style="position:absolute;left:50%;top:6px;transform:translateX(-50%)">${mascot({w:216,mouth:'happy',heart:true,cls:''})}</div></div>
+   <h1>Đã hoàn tất<br>check-in!</h1>
+   <p>Cảm ơn bạn đã dành thời gian<br>lắng nghe chính mình. <span style="color:#3d9a55">💚</span></p>
+   <div class="stats">
+    <div class="stat"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3f8a50" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5q3.5 3.5 7 0M9 9.5v.5M15 9.5v.5"/></svg>Tâm trạng<b>${MOODS[S.mood].n}</b></div>
+    <div class="stat"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fdf0df" stroke="#f28a43" stroke-width="2" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Stress<b>${S.stress}/10</b></div>
+    <div class="stat">${moonIc('#3f8a50',26).replace('<svg','<svg style="display:block;margin:0 auto 6px"')}Ngủ<b>${SLEEP[S.sleep][0]}</b></div>
+   </div></div>
+  <div class="done-foot"><button class="btn p" data-go="0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg> Về trang chủ</button>
+   <button class="btn o" data-go="0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2a5f38" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6C9 4 6 4 3 5v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1zM12 6v14"/></svg> Xem nhật ký</button></div>`;
+}
+
+/* ---------- render ---------- */
+function render(){
+  const fns=[screen0,screen1,screen2,screen3];
+  fns.forEach((f,i)=>{$('p'+i).innerHTML=f()});
+}
+document.addEventListener('click',e=>{
+  const el=e.target.closest('button');if(!el)return;
+  const d=el.dataset;
+  if(d.text!==undefined){
+    S.note=((S.note?S.note+'\n':'')+d.text).slice(0,500);
+    const j=$('journal');j.value=S.note;$('cc').textContent=S.note.length;j.focus();j.setSelectionRange(S.note.length,S.note.length);return;
+  }
+  if(d.mood!==undefined)S.mood=+d.mood;
+  else if(d.stress!==undefined)S.stress=+d.stress;
+  else if(d.sleep!==undefined)S.sleep=+d.sleep;
+  else if(d.ai!==undefined)S.ai=!S.ai;
+  else if(d.go!==undefined){
+    const t=$('p'+d.go);
+    t.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});return;
+  } else return;
+  render();
+});
+document.addEventListener('input',e=>{
+  if(e.target.id==='journal'){S.note=e.target.value;$('cc').textContent=S.note.length}
+});
+render();
+</script>
+</body>
+</html>
