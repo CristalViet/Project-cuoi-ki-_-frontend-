@@ -15,33 +15,34 @@ export interface GalleryPhoto {
   portrait: boolean;
 }
 
-const PHOTO_URLS = [
-  'https://images.unsplash.com/photo-1758736413443-e6c19193ef3a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=82&w=900',
-  'https://images.unsplash.com/photo-1675605567808-5b787f37eb4d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=82&w=900',
-  'https://images.unsplash.com/photo-1744648524980-cba3f00fbd96?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=82&w=900',
-  'https://images.unsplash.com/photo-1661548735649-bf1adffdba78?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=82&w=900',
-  'https://images.unsplash.com/photo-1683061529561-0dfb62e9868b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=82&w=900',
-  'https://images.unsplash.com/photo-1785202817537-c094aabf2f8b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=82&w=900',
-  'https://images.unsplash.com/photo-1613547591419-f7ac3c587bd2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=82&w=900',
-  'https://images.unsplash.com/photo-1792338875080-4d1aec3026d3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=82&w=900',
-  'https://images.unsplash.com/photo-1716178233299-808cd679c02c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=82&w=900',
-  'https://images.unsplash.com/photo-1774203324900-3f5d5df916c1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=82&w=900',
+export const LOCAL_GALLERY_ASSETS = [
+  '/assets/aistudio/journal_thumb_plant.png',
+  '/assets/aistudio/journal_thumb_tea.png',
+  '/assets/aistudio/image_02713824.png',
+  '/assets/aistudio/image_0605d193.png',
+  '/assets/aistudio/Image_11_5cd0f2e2.png',
+  '/assets/aistudio/Image_13_3a231ef5.png',
+  '/assets/aistudio/Image_15_d7080bb6.png',
+  '/assets/aistudio/Image_17_16502448.png',
 ];
 
 const MOCK_TITLES = [
-  'Con đường ngập nắng',
-  'Một chiều thật chậm',
-  'Hoàng hôn sau giờ học',
-  'Những bông hoa nhỏ',
+  'Chậu cây nhỏ bên hiên nắng',
+  'Một tách trà ấm cuối ngày',
+  'Khoảnh khắc dịu êm sau giờ học',
   'Góc bình yên bên cửa sổ',
-  'Đi bộ khi trời dịu',
-  'Bình hoa đầu tuần',
-  'Lối ra biển xanh',
-  'Một tách trà ấm',
-  'Nắng cuối ngày',
+  'Nhịp thở chậm giữa buổi chiều',
+  'Ánh nắng nhẹ qua tán lá',
+  'Trang viết nhỏ cho riêng mình',
+  'Buổi tối thư thái đọc sách',
 ];
 
 const MOCK_MOODS = ['Bình yên', 'Nhẹ nhõm', 'Biết ơn', 'Thư giãn', 'Hy vọng'];
+
+const toLocalDateKey = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+    date.getDate()
+  ).padStart(2, '0')}`;
 
 const formatDate = (date: Date) =>
   new Intl.DateTimeFormat('vi-VN', {
@@ -53,62 +54,66 @@ const formatDate = (date: Date) =>
 const formatMonth = (date: Date) =>
   `Tháng ${date.getMonth() + 1}, ${date.getFullYear()}`;
 
+const sanitizePhotoSrc = (src: string, fallbackIndex: number): string => {
+  if (!src) return LOCAL_GALLERY_ASSETS[fallbackIndex % LOCAL_GALLERY_ASSETS.length];
+  if (src.includes('images.unsplash.com')) {
+    return LOCAL_GALLERY_ASSETS[fallbackIndex % LOCAL_GALLERY_ASSETS.length];
+  }
+  return src;
+};
+
 export const buildGalleryPhotos = (journals: JournalEntry[]): GalleryPhoto[] => {
   const attachedEntries = journals.filter((entry) => Boolean(entry.imageUrl));
   if (attachedEntries.length === 0) return [];
 
-  const userUploads = attachedEntries.filter((entry) => entry.imageUrl?.startsWith('data:image/'));
-
-  if (userUploads.length > 0) {
-    return attachedEntries
-      .map((entry, index) => {
-        const date = new Date(entry.createdAt);
-        return {
-          id: `journal-photo-${entry.id}`,
-          src: entry.imageUrl!,
-          title: entry.title,
-          dateLabel: formatDate(date),
-          dateKey: date.toISOString().slice(0, 10),
-          monthLabel: formatMonth(date),
-          mood: entry.tag,
-          journalId: entry.id,
-          alt: `Ảnh trong nhật ký ${entry.title}`,
-          favoriteByDefault: false,
-          simulated: false,
-          portrait: index % 3 === 0,
-        };
-      })
-      .sort((a, b) => b.dateKey.localeCompare(a.dateKey));
-  }
-
-  const journalPool = journals.length ? journals : [];
-  return Array.from({ length: 28 }).map((_, index) => {
-    const dayOffset =
-      index < 20
-        ? index === 19
-          ? 7
-          : Math.floor(index / 3)
-        : Math.floor((index - 20) / 2);
-    const date = new Date(
-      2026,
-      index < 20 ? 9 : 8,
-      index < 20 ? 18 - dayOffset : 28 - dayOffset
-    );
-    const journal = journalPool[index % Math.max(1, journalPool.length)];
-    const title = journal?.title || MOCK_TITLES[index % MOCK_TITLES.length];
+  const realPhotos: GalleryPhoto[] = attachedEntries.map((entry, index) => {
+    const validTs = entry.createdAt && !Number.isNaN(entry.createdAt) ? entry.createdAt : Date.now();
+    const date = new Date(validTs);
     return {
-      id: `gallery-demo-${index + 1}`,
-      src: PHOTO_URLS[index % PHOTO_URLS.length],
-      title: index < journalPool.length ? title : MOCK_TITLES[index % MOCK_TITLES.length],
+      id: `journal-photo-${entry.id}`,
+      src: sanitizePhotoSrc(entry.imageUrl!, index),
+      title: entry.title || MOCK_TITLES[index % MOCK_TITLES.length],
       dateLabel: formatDate(date),
-      dateKey: date.toISOString().slice(0, 10),
+      dateKey: toLocalDateKey(date),
       monthLabel: formatMonth(date),
-      mood: journal?.tag || MOCK_MOODS[index % MOCK_MOODS.length],
-      journalId: journal?.id || '',
-      alt: MOCK_TITLES[index % MOCK_TITLES.length],
-      favoriteByDefault: index < 6,
-      simulated: true,
-      portrait: index % 4 === 1,
+      mood: entry.tag || 'Nhẹ nhõm',
+      journalId: entry.id,
+      alt: `Ảnh trong nhật ký ${entry.title}`,
+      favoriteByDefault: index < 2,
+      simulated: false,
+      portrait: index % 3 === 0,
     };
   });
+
+  const hasUserUploads = attachedEntries.some((entry) => entry.imageUrl?.startsWith('data:image/'));
+  if (hasUserUploads || attachedEntries.length >= 6) {
+    return realPhotos.sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+  }
+
+  // Supplement with local curated cozy illustrations when only default seed entries exist
+  const now = new Date();
+  const existingSrcs = new Set(realPhotos.map((p) => p.src));
+  const supplemental: GalleryPhoto[] = LOCAL_GALLERY_ASSETS.filter(
+    (asset) => !existingSrcs.has(asset)
+  ).map((asset, idx) => {
+    const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (idx + 2) * 2);
+    const linkedJournal = journals[idx % Math.max(1, journals.length)];
+    const title = MOCK_TITLES[(idx + 2) % MOCK_TITLES.length];
+    return {
+      id: `gallery-local-${idx + 1}`,
+      src: asset,
+      title,
+      dateLabel: formatDate(date),
+      dateKey: toLocalDateKey(date),
+      monthLabel: formatMonth(date),
+      mood: linkedJournal?.tag || MOCK_MOODS[idx % MOCK_MOODS.length],
+      journalId: linkedJournal?.id || '',
+      alt: title,
+      favoriteByDefault: idx < 2,
+      simulated: true,
+      portrait: idx % 3 === 1,
+    };
+  });
+
+  return [...realPhotos, ...supplemental].sort((a, b) => b.dateKey.localeCompare(a.dateKey));
 };

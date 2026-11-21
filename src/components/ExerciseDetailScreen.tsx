@@ -3,6 +3,12 @@ import {
   WELLNESS_EXERCISES,
   WellnessExerciseId,
 } from '../data/wellnessExercises';
+import {
+  MochiHappyCompanion,
+  MochiLandingHero,
+  MochiRestingCompanion,
+  MochiThinkingCompanion,
+} from './MochiIllustrations';
 
 interface ExerciseDetailScreenProps {
   exerciseId: WellnessExerciseId;
@@ -46,26 +52,17 @@ export const ExerciseDetailScreen: React.FC<ExerciseDetailScreenProps> = ({
       <div className="flex min-h-[calc(100vh-33px)] flex-1 flex-col items-center justify-center bg-[var(--color-background)] px-6 text-center text-[var(--color-text-primary)]">
         <div className="relative">
           <div className="absolute inset-6 rounded-full bg-[var(--color-highlight)]/70 blur-xl" />
-          <img
-            src="/assets/MindCare_2D_Assets/characters/mochi_happy.png"
-            alt="Mochi mỉm cười"
-            className="relative h-40 w-40 object-contain [image-rendering:pixelated]"
-          />
-          <img
-            src="/assets/MindCare_2D_Assets/plants/plant_flower.png"
-            alt=""
-            className="absolute -bottom-1 -right-3 h-14 w-14 object-contain [image-rendering:pixelated]"
-          />
+          <MochiLandingHero className="relative h-44 w-52" />
         </div>
-        <h1 className="mt-5 max-w-[280px] text-[22px] font-bold leading-8 text-[var(--color-primary)]">
+        <h1 className="mt-5 max-w-[300px] text-[22px] font-bold leading-8 text-[var(--color-primary)]">
           Bạn đã dành một chút thời gian cho mình
         </h1>
-        <p className="mt-2 max-w-[290px] text-[12px] leading-5 text-[var(--color-text-secondary)]">
+        <p className="mt-2 max-w-[300px] text-[13px] leading-5 text-[var(--color-text-secondary)]">
           Một khoảnh khắc nhỏ cũng có thể giúp ngày hôm nay dịu lại.
         </p>
         <button
           onClick={onBack}
-          className="mt-7 min-h-11 w-full max-w-[280px] rounded-full bg-[var(--color-primary)] px-5 py-3 text-[13px] font-bold text-white active:scale-95"
+          className="mt-7 min-h-11 w-full max-w-[280px] rounded-full bg-[var(--color-primary)] px-5 py-3 text-[13.5px] font-bold text-white active:scale-95 cursor-pointer"
           type="button"
         >
           Về hôm nay
@@ -80,39 +77,45 @@ export const ExerciseDetailScreen: React.FC<ExerciseDetailScreenProps> = ({
     setShowCompletion(true);
   };
 
+  const renderExerciseCompanion = () => {
+    if (exerciseId === 'breathing') {
+      return <MochiRestingCompanion className="mx-auto h-28 w-28" />;
+    }
+    if (exerciseId === 'emotion') {
+      return <MochiThinkingCompanion className="mx-auto h-28 w-28" />;
+    }
+    return <MochiHappyCompanion className="mx-auto h-28 w-28" />;
+  };
+
   return (
     <div className="flex min-h-[calc(100vh-33px)] md:min-h-screen flex-1 flex-col bg-[var(--color-background)] px-4 pb-6 md:px-8 md:pb-10 text-[var(--color-text-primary)]">
       <header className="sticky top-0 z-20 -mx-4 grid grid-cols-[44px_1fr_44px] items-center border-b border-[var(--color-border)] bg-[var(--color-background)]/95 px-3 py-2 backdrop-blur md:mx-auto md:w-full md:max-w-2xl md:rounded-b-2xl md:border-x md:px-5">
         <button
           onClick={onBack}
           aria-label="Quay lại"
-          className="flex h-11 w-11 items-center justify-center rounded-full text-[var(--color-primary)] hover:bg-[var(--color-surface-mint)]"
+          className="flex h-11 w-11 items-center justify-center rounded-full text-[var(--color-primary)] hover:bg-[var(--color-surface-mint)] cursor-pointer"
           type="button"
         >
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
-        <p className="text-center text-[11px] font-bold text-[var(--color-text-secondary)] md:text-[13px]">{exercise.duration}</p>
+        <p className="text-center text-[12px] font-bold text-[var(--color-text-secondary)] md:text-[13px]">
+          {exercise.duration}
+        </p>
         <div />
       </header>
 
       <main className="flex flex-1 flex-col pt-4 md:mx-auto md:w-full md:max-w-2xl md:pt-8">
         <section className="text-center">
-          <img
-            src={
-              exerciseId === 'breathing'
-                ? '/assets/MindCare_2D_Assets/characters/mochi_rest.png'
-                : '/assets/MindCare_2D_Assets/characters/mochi_happy.png'
-            }
-            alt="Mochi đồng hành cùng bài tập"
-            className="mx-auto h-28 w-28 object-contain [image-rendering:pixelated]"
-          />
-          <h1 className="mt-2 text-[21px] font-bold text-[var(--color-primary)] md:text-[25px]">{exercise.title}</h1>
-          <p className="mx-auto mt-1 max-w-[310px] text-[12px] leading-5 text-[var(--color-text-secondary)] md:max-w-md md:text-[14px]">
+          {renderExerciseCompanion()}
+          <h1 className="mt-2 text-[21px] font-bold text-[var(--color-primary)] md:text-[25px]">
+            {exercise.title}
+          </h1>
+          <p className="mx-auto mt-1 max-w-[310px] text-[12.5px] leading-5 text-[var(--color-text-secondary)] md:max-w-md md:text-[14px]">
             {exercise.description}
           </p>
           {isCompleted && (
-            <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[var(--color-highlight)] px-3 py-1 text-[10px] font-bold text-[var(--color-primary)]">
-              <span className="material-symbols-outlined text-[14px]">check_circle</span>
+            <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[var(--color-highlight)] px-3 py-1 text-[11.5px] font-bold text-[var(--color-primary)]">
+              <span className="material-symbols-outlined text-[15px]">check_circle</span>
               Đã hoàn thành hôm nay
             </span>
           )}
@@ -121,16 +124,16 @@ export const ExerciseDetailScreen: React.FC<ExerciseDetailScreenProps> = ({
         <section className="mt-5 flex-1 rounded-[24px] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 md:p-7">
           {exerciseId === 'gratitude' && (
             <>
-              <h2 className="text-[14px] font-bold leading-6 text-[var(--color-primary)]">
+              <h2 className="text-[14.5px] font-bold leading-6 text-[var(--color-primary)]">
                 Hôm nay có 3 điều gì khiến bạn cảm thấy biết ơn?
               </h2>
-              <p className="mt-1 text-[10.5px] leading-4 text-[var(--color-text-secondary)]">
+              <p className="mt-1 text-[12px] leading-5 text-[var(--color-text-secondary)]">
                 Bạn có thể viết một, hai hoặc cả ba điều. Nội dung chỉ được dùng trong bài tập này.
               </p>
               <div className="mt-4 space-y-3">
                 {gratitude.map((value, index) => (
                   <label key={index} className="flex items-center gap-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#F8E5D2] text-[11px] font-bold text-[#8A6746]">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#F8E5D2] text-[12px] font-bold text-[#8A6746]">
                       {index + 1}
                     </span>
                     <input
@@ -143,14 +146,13 @@ export const ExerciseDetailScreen: React.FC<ExerciseDetailScreenProps> = ({
                         )
                       }
                       placeholder="Một điều nhỏ mình trân trọng..."
-                      className="min-h-11 flex-1 rounded-xl border border-[var(--color-border)] bg-white px-3 text-[12px] outline-none focus:border-[var(--color-secondary)]"
+                      className="min-h-11 flex-1 rounded-xl border border-[var(--color-border)] bg-white px-3 text-[13px] outline-none focus:border-[var(--color-secondary)]"
                     />
                   </label>
                 ))}
               </div>
-              <p className="mt-4 rounded-xl bg-[var(--color-chart-background)] p-3 text-[10px] leading-4 text-[var(--color-text-secondary)]">
-                Bài tập này không tự tạo nhật ký. Bạn luôn có quyền quyết định nội dung nào được
-                lưu vào Nhật ký.
+              <p className="mt-4 rounded-xl bg-[var(--color-chart-background)] p-3 text-[11.5px] leading-5 text-[var(--color-text-secondary)]">
+                Bài tập này không tự tạo nhật ký. Bạn luôn có quyền quyết định nội dung nào được lưu vào Nhật ký.
               </p>
             </>
           )}
@@ -162,25 +164,29 @@ export const ExerciseDetailScreen: React.FC<ExerciseDetailScreenProps> = ({
                   {['Sẵn sàng', 'Hít vào', 'Giữ nhẹ', 'Thở ra'][breathStep]}
                 </span>
               </div>
-              <p className="mt-5 max-w-[250px] text-[11px] leading-5 text-[var(--color-text-secondary)]">
+              <p className="mt-5 max-w-[260px] text-[12px] leading-5 text-[var(--color-text-secondary)]">
                 Thả lỏng vai và đi qua ba nhịp thở theo tốc độ thoải mái của bạn.
               </p>
               <button
                 onClick={() => setBreathStep((step) => Math.min(3, step + 1))}
-                className="mt-4 min-h-11 rounded-full border border-[var(--color-secondary)] px-5 text-[12px] font-bold text-[var(--color-primary)] active:scale-95"
+                className="mt-4 min-h-11 rounded-full border border-[var(--color-secondary)] px-5 text-[12.5px] font-bold text-[var(--color-primary)] active:scale-95 cursor-pointer"
                 type="button"
               >
-                {breathStep === 0 ? 'Bắt đầu nhịp thở' : breathStep < 3 ? 'Nhịp tiếp theo' : 'Đã xong nhịp thở'}
+                {breathStep === 0
+                  ? 'Bắt đầu nhịp thở'
+                  : breathStep < 3
+                    ? 'Nhịp tiếp theo'
+                    : 'Đã xong nhịp thở'}
               </button>
             </div>
           )}
 
           {exerciseId === 'emotion' && (
             <>
-              <h2 className="text-[14px] font-bold text-[var(--color-primary)]">
+              <h2 className="text-[14.5px] font-bold text-[var(--color-primary)]">
                 Cảm xúc nào gần với bạn nhất lúc này?
               </h2>
-              <p className="mt-1 text-[10.5px] leading-4 text-[var(--color-text-secondary)]">
+              <p className="mt-1 text-[12px] leading-5 text-[var(--color-text-secondary)]">
                 Không có câu trả lời đúng hay sai. Chỉ cần chọn điều gần nhất.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
@@ -189,7 +195,7 @@ export const ExerciseDetailScreen: React.FC<ExerciseDetailScreenProps> = ({
                     key={emotion}
                     onClick={() => setSelectedEmotion(emotion)}
                     aria-pressed={selectedEmotion === emotion}
-                    className={`min-h-11 rounded-full border px-4 text-[12px] font-semibold transition ${
+                    className={`min-h-11 rounded-full border px-4 text-[12.5px] font-semibold transition cursor-pointer ${
                       selectedEmotion === emotion
                         ? 'border-[var(--color-secondary)] bg-[var(--color-highlight)] text-[var(--color-primary)]'
                         : 'border-[var(--color-border)] bg-white text-[var(--color-text-secondary)]'
@@ -201,9 +207,8 @@ export const ExerciseDetailScreen: React.FC<ExerciseDetailScreenProps> = ({
                 ))}
               </div>
               {selectedEmotion && (
-                <p className="mt-5 rounded-2xl bg-[var(--color-chart-background)] p-4 text-[11px] leading-5 text-[var(--color-text-secondary)]">
-                  Cảm ơn bạn đã gọi tên cảm xúc “{selectedEmotion}”. Chỉ việc nhận ra nó cũng đã
-                  là một bước chăm sóc bản thân.
+                <p className="mt-5 rounded-2xl bg-[var(--color-chart-background)] p-4 text-[12px] leading-5 text-[var(--color-text-secondary)]">
+                  Cảm ơn bạn đã gọi tên cảm xúc “{selectedEmotion}”. Chỉ việc nhận ra nó cũng đã là một bước chăm sóc bản thân.
                 </p>
               )}
             </>
@@ -211,10 +216,10 @@ export const ExerciseDetailScreen: React.FC<ExerciseDetailScreenProps> = ({
 
           {exerciseId === 'selfcare' && (
             <>
-              <h2 className="text-[14px] font-bold text-[var(--color-primary)]">
+              <h2 className="text-[14.5px] font-bold text-[var(--color-primary)]">
                 Chọn một việc nhỏ phù hợp với bạn
               </h2>
-              <p className="mt-1 text-[10.5px] leading-4 text-[var(--color-text-secondary)]">
+              <p className="mt-1 text-[12px] leading-5 text-[var(--color-text-secondary)]">
                 Đây là lời gợi ý, không phải danh sách bắt buộc.
               </p>
               <div className="mt-4 space-y-2.5">
@@ -222,7 +227,7 @@ export const ExerciseDetailScreen: React.FC<ExerciseDetailScreenProps> = ({
                   <button
                     key={option}
                     onClick={() => setSelectedSelfcare(option)}
-                    className={`flex min-h-12 w-full items-center justify-between rounded-2xl border px-4 text-left text-[12px] font-semibold transition ${
+                    className={`flex min-h-12 w-full items-center justify-between rounded-2xl border px-4 text-left text-[12.5px] font-semibold transition cursor-pointer ${
                       selectedSelfcare === option
                         ? 'border-[var(--color-secondary)] bg-[var(--color-surface-mint)] text-[var(--color-primary)]'
                         : 'border-[var(--color-border)] bg-white text-[var(--color-text-secondary)]'
@@ -243,7 +248,7 @@ export const ExerciseDetailScreen: React.FC<ExerciseDetailScreenProps> = ({
         <div className="mt-4 grid grid-cols-[1fr_1.5fr] gap-3">
           <button
             onClick={onBack}
-            className="min-h-11 rounded-full border border-[var(--color-border)] text-[12px] font-bold text-[var(--color-text-secondary)] active:scale-95"
+            className="min-h-11 rounded-full border border-[var(--color-border)] text-[12.5px] font-bold text-[var(--color-text-secondary)] active:scale-95 cursor-pointer"
             type="button"
           >
             Để sau
@@ -251,7 +256,7 @@ export const ExerciseDetailScreen: React.FC<ExerciseDetailScreenProps> = ({
           <button
             onClick={complete}
             disabled={!canComplete}
-            className="min-h-11 rounded-full bg-[var(--color-primary)] text-[12px] font-bold text-white active:scale-95 disabled:cursor-not-allowed disabled:bg-[var(--color-text-secondary)]"
+            className="min-h-11 rounded-full bg-[var(--color-primary)] text-[12.5px] font-bold text-white active:scale-95 disabled:cursor-not-allowed disabled:bg-[var(--color-text-secondary)] cursor-pointer"
             type="button"
           >
             Hoàn thành

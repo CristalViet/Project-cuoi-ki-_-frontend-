@@ -1,10 +1,19 @@
-import React, { useState, useId } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { CheckIn } from '../types';
 import { soundEngine } from '../utils/audio';
 
+function getLocalClockStr(): string {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+}
+
+const LEGACY_DEFAULT_NOTE = 'Hôm nay dành thời gian lắng nghe và chăm sóc cảm xúc bản thân.';
+
 interface CheckInModalProps {
   initialCheckIn: CheckIn;
-  onSave: (checkIn: CheckIn, targetTab?: 'home' | 'journal') => void;
+  defaultAllowAi?: boolean;
+  onSave: (checkIn: CheckIn) => void;
+  onComplete: (targetTab: 'home' | 'journal') => void;
   onClose: () => void;
 }
 
@@ -311,7 +320,9 @@ const Dashes = ({ flip = false }: { flip?: boolean }) => (
 
 export const CheckInModal: React.FC<CheckInModalProps> = ({
   initialCheckIn,
+  defaultAllowAi,
   onSave,
+  onComplete,
   onClose,
 }) => {
   // Step 0: Mood, Step 1: Stress & Sleep, Step 2: Note & AI, Step 3: Done screen
@@ -335,14 +346,34 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
     return 3;
   };
 
+  const dt = new Date();
+  const todayIso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(
+    dt.getDate()
+  ).padStart(2, '0')}`;
+
   const [mood, setMood] = useState<number>(getInitialMoodIndex());
   const [stress, setStress] = useState<number>(initialCheckIn.stress ?? 4);
   const [sleep, setSleep] = useState<number>(getInitialSleepIndex());
-  const [note, setNote] = useState<string>(initialCheckIn.note || '');
-  const [ai, setAi] = useState<boolean>(initialCheckIn.allowAiPersonalize ?? true);
+  const [note, setNote] = useState<string>(
+    initialCheckIn.date === todayIso &&
+      initialCheckIn.note &&
+      initialCheckIn.note !== LEGACY_DEFAULT_NOTE
+      ? initialCheckIn.note
+      : ''
+  );
+  const [ai, setAi] = useState<boolean>(
+    defaultAllowAi ?? initialCheckIn.allowAiPersonalize ?? true
+  );
+  const [completedRecord, setCompletedRecord] = useState<CheckIn | null>(null);
+  const [liveClock, setLiveClock] = useState<string>(getLocalClockStr);
 
-  const dt = new Date();
+  useEffect(() => {
+    const timer = window.setInterval(() => setLiveClock(getLocalClockStr()), 15000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const DOW = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+  const SHORT_DOW = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
   const dateStr = `${DOW[dt.getDay()]}, ${dt.getDate()} tháng ${dt.getMonth() + 1}`;
 
   const stressInfo = () => {
@@ -359,6 +390,13 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
       soundEngine.playChime('hold');
     } catch {
       // ignore
+    }
+    if (step === 2) {
+      const record = createCheckInRecord();
+      setCompletedRecord(record);
+      onSave(record);
+      setStep(3);
+      return;
     }
     setStep((prev) => (Math.min(3, prev + 1) as 0 | 1 | 2 | 3));
   };
@@ -382,12 +420,18 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
   };
 
   const createCheckInRecord = (): CheckIn => {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
     const sleepOpt = SLEEP_OPTIONS[sleep];
     return {
-      id: initialCheckIn.id || 'ci-' + Date.now(),
-      date: '2026-10-18',
-      dayLabel: 'CN',
-      time: '08:30 sáng',
+      id: 'ci-' + Date.now(),
+      date: `${yyyy}-${mm}-${dd}`,
+      dayLabel: SHORT_DOW[now.getDay()],
+      time: `${hh}:${min}`,
       mood: currentMoodObj.score,
       moodLabel: currentMoodObj.n,
       stress,
@@ -395,20 +439,20 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
       sleepHours: sleepOpt.hours,
       sleepQuality: sleepOpt.quality,
       emotions: [currentMoodObj.n, currentStressBadge.label],
-      note: note.trim() || 'Hôm nay dành thời gian lắng nghe và chăm sóc cảm xúc bản thân.',
+      note: note.trim(),
       allowAiPersonalize: ai,
-      createdAt: Date.now(),
+      createdAt: now.getTime(),
     };
   };
 
   const handleFinish = (targetTab: 'home' | 'journal') => {
+    if (!completedRecord) return;
     try {
       soundEngine.playChime('exhale');
     } catch {
       // ignore
     }
-    const record = createCheckInRecord();
-    onSave(record, targetTab);
+    onComplete(targetTab);
   };
 
   return (
@@ -429,32 +473,13 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
         {/* Top Status Bar & Navigation (Steps 0, 1, 2) */}
         {step < 3 ? (
           <div className="relative z-20 pt-3 px-5 md:pt-5 md:px-7">
-            {/* Status bar (Mobile only) */}
-            <div className="flex justify-between items-center text-[13px] font-bold text-[var(--color-text-primary)] px-1 md:hidden">
-              <span>9:41</span>
-              <div className="flex items-center gap-1.5 opacity-90">
-                <svg width="17" height="11" viewBox="0 0 18 12" fill="var(--color-text-primary)">
-                  <rect x="0" y="8" width="3" height="4" rx="1" />
-                  <rect x="5" y="5" width="3" height="7" rx="1" />
-                  <rect x="10" y="2.5" width="3" height="9.5" rx="1" />
-                  <rect x="15" y="0" width="3" height="12" rx="1" />
-                </svg>
-                <svg
-                  width="15"
-                  height="11"
-                  viewBox="0 0 24 18"
-                  fill="none"
-                  stroke="var(--color-text-primary)"
-                  strokeWidth="2.6"
-                  strokeLinecap="round"
-                >
-                  <path d="M2 6a15 15 0 0 1 20 0M6 10.5a9 9 0 0 1 12 0" />
-                  <circle cx="12" cy="15" r="1.6" fill="var(--color-text-primary)" />
-                </svg>
-                <div className="w-5 h-2.5 border border-[var(--color-text-primary)] rounded-[3px] p-[1px] flex items-center">
-                  <div className="w-full h-full bg-[var(--color-text-primary)] rounded-[1.5px]" />
-                </div>
-              </div>
+            {/* Live Local Time & Privacy Status (Mobile only) */}
+            <div className="flex justify-between items-center text-[12px] font-semibold text-[var(--color-text-secondary)] px-1 md:hidden">
+              <span className="tabular-nums font-bold text-[var(--color-text-primary)]">{liveClock}</span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/75 border border-[var(--color-border)] px-2 py-0.5 text-[10.5px]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+                Riêng tư
+              </span>
             </div>
 
             {/* Brand top bar */}
@@ -521,13 +546,12 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
         ) : (
           /* Completion Status bar */
           <div className="relative z-20 pt-3 px-5 md:pt-5 md:px-7">
-            <div className="flex justify-between items-center text-[13px] font-bold text-[var(--color-text-primary)] px-1 md:hidden">
-              <span>9:41</span>
-              <div className="flex items-center gap-1.5 opacity-90">
-                <div className="w-5 h-2.5 border border-[var(--color-text-primary)] rounded-[3px] p-[1px] flex items-center">
-                  <div className="w-full h-full bg-[var(--color-text-primary)] rounded-[1.5px]" />
-                </div>
-              </div>
+            <div className="flex justify-between items-center text-[12px] font-semibold text-[var(--color-text-secondary)] px-1 md:hidden">
+              <span className="tabular-nums font-bold text-[var(--color-text-primary)]">{liveClock}</span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/75 border border-[var(--color-border)] px-2 py-0.5 text-[10.5px]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+                Đã ghi nhận
+              </span>
             </div>
             <div className="flex items-center justify-center relative mt-2.5 h-10">
               <div className="flex items-center gap-1.5 font-black text-[19px] text-[var(--color-primary)] tracking-tight">
@@ -540,7 +564,7 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
 
         {/* Screen 0: Mood Selection */}
         {step === 0 && (
-          <div className="relative z-10 flex-1 px-5 pt-2 flex flex-col justify-between pb-6 animate-in fade-in duration-200">
+          <div className="relative z-10 flex-1 px-5 pt-2 flex flex-col justify-between pb-6 animate-fade-in">
             <div>
               {/* Date */}
               <div className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--color-text-secondary)] mt-1">
@@ -661,7 +685,7 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
 
         {/* Screen 1: Stress & Sleep */}
         {step === 1 && (
-          <div className="relative z-10 flex-1 px-5 pt-2 flex flex-col justify-between pb-6 animate-in fade-in duration-200">
+          <div className="relative z-10 flex-1 px-5 pt-2 flex flex-col justify-between pb-6 animate-fade-in">
             <div>
               {/* Stress Header */}
               <div className="flex items-center justify-between mt-1">
@@ -850,7 +874,7 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
 
         {/* Screen 2: Note & AI */}
         {step === 2 && (
-          <div className="relative z-10 flex-1 px-5 pt-2 flex flex-col justify-between pb-6 animate-in fade-in duration-200">
+          <div className="relative z-10 flex-1 px-5 pt-2 flex flex-col justify-between pb-6 animate-fade-in">
             <div>
               {/* Heading */}
               <h1 className="text-[21px] leading-[1.15] font-black text-[var(--color-primary)] mt-1">
@@ -1002,7 +1026,7 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
 
         {/* Screen 3: Done Screen */}
         {step === 3 && (
-          <div className="relative z-10 flex-1 px-5 pt-1 flex flex-col justify-between pb-7 text-center animate-in fade-in duration-200">
+          <div className="relative z-10 flex-1 px-5 pt-1 flex flex-col justify-between pb-7 text-center animate-fade-in">
             <div>
               {/* Celebratory Mascot hugging heart */}
               <div className="relative w-[230px] h-[200px] mx-auto mt-4">
@@ -1038,6 +1062,10 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
                 <span className="material-symbols-outlined filled ml-1 text-[16px] text-[var(--color-secondary)]">
                   favorite
                 </span>
+              </p>
+
+              <p role="status" aria-live="polite" className="mt-2 text-[12px] font-semibold text-[var(--color-primary)]">
+                Check-in đã được ghi nhận trên thiết bị này.
               </p>
 
               {/* 3 Stats Badges */}

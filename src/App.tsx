@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   MainTab,
   SubScreen,
@@ -7,6 +7,10 @@ import {
   TrustedContact,
   DailyHabit,
   ChatMessage,
+  RiskSnapshot,
+  ConsentProfile,
+  AdaptiveScreeningPrompt,
+  HealthStatusDTO,
 } from './types';
 import {
   INITIAL_CHECKINS,
@@ -15,6 +19,12 @@ import {
   INITIAL_HABITS,
   INITIAL_CHAT_MESSAGES,
 } from './data/mockData';
+import {
+  apiClient,
+  DEFAULT_CONSENT_PROFILE,
+  DEFAULT_RISK_SNAPSHOT,
+  streamMochiChat,
+} from './services/apiClient';
 import { TopStatusBar } from './components/TopStatusBar';
 import { BottomNavigation } from './components/BottomNavigation';
 import { HomeScreen } from './components/HomeScreen';
@@ -33,7 +43,7 @@ import { ScreenSwitcherDrawer } from './components/ScreenSwitcherDrawer';
 import { StreakDetailsScreen } from './components/StreakDetailsScreen';
 import { ExerciseDetailScreen } from './components/ExerciseDetailScreen';
 import { WellnessExerciseId } from './data/wellnessExercises';
-import { localDateKey } from './utils/journalStats';
+import { localDateKey, getJournalStats } from './utils/journalStats';
 import {
   SharingEntryRoute,
   SharingFlowScreen,
@@ -43,26 +53,60 @@ import { JournalPhotoDetailScreen } from './components/JournalPhotoDetailScreen'
 import { GalleryJournalEntryScreen } from './components/GalleryJournalEntryScreen';
 import { buildGalleryPhotos } from './data/journalGallery';
 import { DesktopSidebar } from './components/DesktopSidebar';
-import { getJournalStats } from './utils/journalStats';
+import { PwaUpdatePrompt } from './components/PwaUpdatePrompt';
+import { CrisisSafeModeDrawer } from './components/CrisisSafeModeDrawer';
+import { CounselorTriageDrawer } from './components/CounselorTriageDrawer';
+
+const VIET_WEEKDAYS = [
+  'Chủ nhật',
+  'Thứ hai',
+  'Thứ ba',
+  'Thứ tư',
+  'Thứ năm',
+  'Thứ sáu',
+  'Thứ bảy',
+];
+
+function formatRealVietnameseDate(now: Date): { date: string; dayLabel: string; time: string } {
+  const dayLabel = VIET_WEEKDAYS[now.getDay()];
+  const dd = String(now.getDate()).padStart(2, '0');
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const yyyy = now.getFullYear();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const min = String(now.getMinutes()).padStart(2, '0');
+  return {
+    date: `${dayLabel}, ${dd}/${mm}/${yyyy}`,
+    dayLabel,
+    time: `${hh}:${min}`,
+  };
+}
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<MainTab>('home');
   const [subScreen, setSubScreen] = useState<SubScreen>(null);
 
-  // Persistent States
+  // Core Persistent States
   const [checkIns, setCheckIns] = useState<CheckIn[]>(() => {
     const saved = localStorage.getItem('mindcare_checkins');
     return saved ? JSON.parse(saved) : INITIAL_CHECKINS;
   });
 
   const [journals, setJournals] = useState<JournalEntry[]>(() => {
-    const saved = localStorage.getItem('mindcare_journals');
-    return saved ? JSON.parse(saved) : INITIAL_JOURNAL_ENTRIES;
+    try {
+      const saved = localStorage.getItem('mindcare_journals');
+      return saved !== null ? JSON.parse(saved) : INITIAL_JOURNAL_ENTRIES;
+    } catch {
+      return INITIAL_JOURNAL_ENTRIES;
+    }
   });
 
   const [contacts, setContacts] = useState<TrustedContact[]>(() => {
-    const saved = localStorage.getItem('mindcare_contacts');
-    return saved ? JSON.parse(saved) : INITIAL_CONTACTS;
+    try {
+      const saved = localStorage.getItem('mindcare_contacts');
+      return saved !== null ? JSON.parse(saved) : INITIAL_CONTACTS;
+    } catch {
+      return INITIAL_CONTACTS;
+    }
   });
 
   const [habits, setHabits] = useState<DailyHabit[]>(() => {
@@ -73,6 +117,38 @@ export default function App() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
     const saved = localStorage.getItem('mindcare_chat');
     return saved ? JSON.parse(saved) : INITIAL_CHAT_MESSAGES;
+  });
+
+  // Phase 4 Risk Engine & Safety States
+  const [riskSnapshot, setRiskSnapshot] = useState<RiskSnapshot>(() => {
+    try {
+      const saved = localStorage.getItem('mindcare_risk_snapshot_v2');
+      return saved ? JSON.parse(saved) : DEFAULT_RISK_SNAPSHOT;
+    } catch {
+      return DEFAULT_RISK_SNAPSHOT;
+    }
+  });
+
+  const [consentProfile, setConsentProfile] = useState<ConsentProfile>(() => {
+    try {
+      const saved = localStorage.getItem('mindcare_consent_profile_v2');
+      return saved ? JSON.parse(saved) : DEFAULT_CONSENT_PROFILE;
+    } catch {
+      return DEFAULT_CONSENT_PROFILE;
+    }
+  });
+
+  const [crisisDrawerOpen, setCrisisDrawerOpen] = useState(false);
+  const [counselorDrawerOpen, setCounselorDrawerOpen] = useState(false);
+  const [activeScreeningPrompt, setActiveScreeningPrompt] =
+    useState<AdaptiveScreeningPrompt | null>(null);
+  const [isMochiStreaming, setIsMochiStreaming] = useState(false);
+  const [healthStatus, setHealthStatus] = useState<HealthStatusDTO>({
+    status: 'offline_pwa',
+    version: '2.0.0',
+    geminiConfigured: false,
+    model: 'client-safety-fallback',
+    online: false,
   });
 
   const [editingJournal, setEditingJournal] = useState<JournalEntry | null>(null);
@@ -104,7 +180,68 @@ export default function App() {
   });
   const galleryPhotos = buildGalleryPhotos(journals);
 
-  // Sync to local storage
+  const applyIncomingRiskSnapshot = useCallback(
+    (snapshot: RiskSnapshot, forceOpenCrisis = false) => {
+      setRiskSnapshot(snapshot);
+      if (snapshot.adaptiveScreeningPrompt) {
+        setActiveScreeningPrompt(snapshot.adaptiveScreeningPrompt);
+      }
+      if (snapshot.currentTier === 'L4' || forceOpenCrisis) {
+        setCrisisDrawerOpen(true);
+      }
+    },
+    []
+  );
+
+  // Initial Synchronization with Backend (gracefully falling back to localStorage)
+  useEffect(() => {
+    apiClient.getClientId();
+    let mounted = true;
+
+    Promise.all([
+      apiClient.checkHealth(),
+      apiClient.getRiskState(),
+      apiClient.getConsent(),
+      apiClient.getCheckIns(),
+      apiClient.getJournals(),
+      apiClient.getContacts(),
+    ]).then(([health, snap, consent, remoteCheckins, remoteJournals, remoteContacts]) => {
+      if (!mounted) return;
+      setHealthStatus(health);
+      setRiskSnapshot(snap);
+      if (snap.adaptiveScreeningPrompt) {
+        setActiveScreeningPrompt(snap.adaptiveScreeningPrompt);
+      }
+      if (snap.currentTier === 'L4') {
+        setCrisisDrawerOpen(true);
+      }
+      setConsentProfile(consent);
+      if (Array.isArray(remoteCheckins) && remoteCheckins.length > 0) {
+        setCheckIns(remoteCheckins);
+      }
+      if (health.online) {
+        if (Array.isArray(remoteJournals)) {
+          setJournals(remoteJournals);
+        }
+        if (Array.isArray(remoteContacts)) {
+          setContacts(remoteContacts);
+        }
+      } else {
+        if (Array.isArray(remoteJournals) && remoteJournals.length > 0) {
+          setJournals(remoteJournals);
+        }
+        if (Array.isArray(remoteContacts) && remoteContacts.length > 0) {
+          setContacts(remoteContacts);
+        }
+      }
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Sync to localStorage
   useEffect(() => {
     localStorage.setItem('mindcare_checkins', JSON.stringify(checkIns));
   }, [checkIns]);
@@ -142,18 +279,41 @@ export default function App() {
 
   const latestCheckIn = checkIns[0] || INITIAL_CHECKINS[0];
 
+  const handleUpdateConsent = (nextConsent: ConsentProfile) => {
+    setConsentProfile(nextConsent);
+    apiClient.updateConsent(nextConsent).then((saved) => {
+      setConsentProfile(saved);
+    });
+  };
+
   // Actions
-  const handleSaveCheckIn = (newCheckIn: CheckIn, targetTab?: 'home' | 'journal') => {
+  const handleSaveCheckIn = (newCheckIn: CheckIn) => {
+    const nextCheckIns = [newCheckIn, ...checkIns.filter((c) => c.id !== newCheckIn.id)];
     setCheckIns((prev) => [newCheckIn, ...prev.filter((c) => c.id !== newCheckIn.id)]);
-    
-    // If user wrote a personal note during check-in, sync it as a journal entry
+    try {
+      localStorage.setItem('mindcare_checkins', JSON.stringify(nextCheckIns));
+    } catch {
+      // The component state remains usable if browser storage is unavailable.
+    }
+
+    apiClient.createCheckIn(newCheckIn).then((res) => {
+      setCheckIns((prev) => [
+        res.checkIn,
+        ...prev.filter((c) => c.id !== res.checkIn.id && c.id !== newCheckIn.id),
+      ]);
+      applyIncomingRiskSnapshot(res.riskSnapshot);
+    });
+
+    // If user wrote a personal note during check-in, sync it as an encrypted journal entry
     if (newCheckIn.note && newCheckIn.note.trim()) {
       const now = new Date();
-      const newEntry: JournalEntry = {
-        id: 'j-' + Date.now(),
-        date: `Chủ nhật, ${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`,
-        dayLabel: 'Chủ nhật',
-        time: `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`,
+      const formatted = formatRealVietnameseDate(now);
+      const entryId = 'j-' + Date.now();
+      const optimisticEntry: JournalEntry = {
+        id: entryId,
+        date: formatted.date,
+        dayLabel: formatted.dayLabel,
+        time: formatted.time,
         title: `Ghi chép tâm trạng: ${newCheckIn.moodLabel}`,
         content: newCheckIn.note,
         tag: newCheckIn.moodLabel,
@@ -163,47 +323,72 @@ export default function App() {
         aiBarWidth: Math.min(100, newCheckIn.mood * 10),
         isEncrypted: true,
         allowAiRef: newCheckIn.allowAiPersonalize,
-        createdAt: Date.now(),
+        createdAt: now.getTime(),
       };
-      setJournals((prev) => [newEntry, ...prev]);
+      setJournals((prev) => [optimisticEntry, ...prev]);
+
+      apiClient.createJournal(optimisticEntry).then((res) => {
+        setJournals((prev) =>
+          prev.map((item) => (item.id === entryId ? res.journal : item))
+        );
+        applyIncomingRiskSnapshot(res.riskSnapshot);
+      });
     }
 
-    setSubScreen(null);
-    if (targetTab === 'journal') {
-      setActiveTab('journal');
-    } else {
-      setActiveTab('home');
-    }
   };
 
-  const handleSaveJournal = (journalData: Partial<JournalEntry>) => {
+  const handleSaveJournal = async (journalData: Partial<JournalEntry>) => {
     if (editingJournal) {
+      const mergedDraft: JournalEntry = {
+        ...editingJournal,
+        ...journalData,
+        isEncrypted: true,
+      };
+      const res = await apiClient.updateJournal(editingJournal.id, mergedDraft);
       setJournals((prev) =>
-        prev.map((j) => (j.id === editingJournal.id ? { ...j, ...journalData } as JournalEntry : j))
+        prev.map((j) => (j.id === editingJournal.id ? res.journal : j))
       );
+      applyIncomingRiskSnapshot(res.riskSnapshot);
     } else {
       const now = new Date();
-      const newEntry: JournalEntry = {
-        id: 'j-' + Date.now(),
-        date: `Chủ nhật, ${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`,
-        dayLabel: 'Chủ nhật',
-        time: `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`,
+      const formatted = formatRealVietnameseDate(now);
+      const newId = 'j-' + Date.now();
+      const payload: JournalEntry = {
+        id: newId,
+        date: formatted.date,
+        dayLabel: formatted.dayLabel,
+        time: formatted.time,
         title: journalData.title || 'Nhật ký cá nhân',
         content: journalData.content || '',
         tag: journalData.tag || 'Nhẹ nhõm',
         moodScore: journalData.moodScore || 6,
         aiEstimateLabel: journalData.aiEstimateLabel || 'Tích cực nhẹ',
         aiEstimateScore: journalData.aiEstimateScore || 6,
-        aiBarWidth: journalData.aiBarWidth || 62,
+        aiBarWidth: journalData.aiBarWidth || 60,
         isEncrypted: true,
         allowAiRef: journalData.allowAiRef || false,
-        createdAt: Date.now(),
+        createdAt: now.getTime(),
+        imageUrl: journalData.imageUrl,
       };
-      setJournals((prev) => [newEntry, ...prev]);
+      const res = await apiClient.createJournal(payload);
+      setJournals((prev) => [res.journal, ...prev]);
+      applyIncomingRiskSnapshot(res.riskSnapshot);
     }
     setEditingJournal(null);
     setSubScreen(null);
     setActiveTab('journal');
+  };
+
+  const handleDeleteJournal = (journalId: string) => {
+    setJournals((prev) => prev.filter((j) => j.id !== journalId));
+    if (editingJournal?.id === journalId) {
+      setEditingJournal(null);
+      if (subScreen === 'journal_edit') {
+        setSubScreen(null);
+        setActiveTab('journal');
+      }
+    }
+    apiClient.deleteJournal(journalId);
   };
 
   const handleToggleHabit = (id: string) => {
@@ -216,14 +401,46 @@ export default function App() {
     setHabits((prev) => [...prev, { id: 'h-' + Date.now(), title, completed: false }]);
   };
 
+  const handleDeleteHabit = (id: string) => {
+    setHabits((prev) => prev.filter((h) => h.id !== id));
+  };
+
+  const handleEditHabit = (id: string, title: string) => {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    setHabits((prev) =>
+      prev.map((h) => (h.id === id ? { ...h, title: trimmed } : h))
+    );
+  };
+
   const handleSaveContact = (contact: TrustedContact) => {
     setContacts((prev) => [...prev, contact]);
     setSubScreen('contacts');
+    apiClient.createContact(contact).then((saved) => {
+      setContacts((prev) => prev.map((c) => (c.id === contact.id ? saved : c)));
+    });
   };
 
+  const handleUpdateContact = (contactId: string, patch: Partial<TrustedContact>) => {
+    setContacts((prev) =>
+      prev.map((c) => (c.id === contactId ? { ...c, ...patch, neverShareJournal: true } : c))
+    );
+    apiClient.updateContact(contactId, patch).then((saved) => {
+      setContacts((prev) => prev.map((c) => (c.id === contactId ? saved : c)));
+    });
+  };
+
+  const handleDeleteContact = (contactId: string) => {
+    setContacts((prev) => prev.filter((c) => c.id !== contactId));
+    apiClient.deleteContact(contactId);
+  };
+
+  // Real-time SSE Streaming Mochi Chat with 4-Layer Safety Engine
   const handleSendMessage = (text: string) => {
     const now = new Date();
-    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(
+      now.getMinutes()
+    ).padStart(2, '0')}`;
 
     const userMsg: ChatMessage = {
       id: 'm-' + Date.now(),
@@ -232,32 +449,105 @@ export default function App() {
       time: timeStr,
     };
 
-    setChatMessages((prev) => [...prev, userMsg]);
+    const assistantMsgId = 'm-ai-' + (Date.now() + 1);
+    const placeholderAiMsg: ChatMessage = {
+      id: assistantMsgId,
+      sender: 'assistant',
+      text: '',
+      time: timeStr,
+    };
 
-    // Generate supportive empathetic student response
-    setTimeout(() => {
-      let replyText = 'Mình luôn ở đây lắng nghe bạn. Bạn đang làm rất tốt trong hành trình học tập và hoàn thiện bản thân.';
-      const lower = text.toLowerCase();
+    const historyPayload = [...chatMessages, userMsg]
+      .filter((m) => m.text.trim().length > 0)
+      .slice(-8)
+      .map((m) => ({
+        sender: m.sender,
+        text: m.text,
+      }));
 
-      if (lower.includes('thở') || lower.includes('4-7-8')) {
-        replyText = 'Kỹ thuật thở 4-7-8 giúp kích hoạt hệ thần kinh phó giao cảm, làm giảm nhịp tim và ổn định tinh thần. Bạn có thể bấm vào nút Hướng dẫn thở 4-7-8 bên dưới để bắt đầu ngay 2 phút nhé.';
-      } else if (lower.includes('áp lực') || lower.includes('deadline') || lower.includes('đồ án') || lower.includes('thi')) {
-        replyText = 'Khi đối diện với hạn nộp và đồ án dồn dập, cảm giác choáng ngợp là hoàn toàn tự nhiên. Một cách hiệu quả là hãy chọn ra chỉ 1 phần nhỏ nhất cần làm trong 25 phút tới, sau đó tự thưởng cho mình một cốc nước ấm hoặc 5 phút vươn vai nhé.';
-      } else if (lower.includes('ngủ') || lower.includes('mệt') || lower.includes('thức khuya')) {
-        replyText = 'Giấc ngủ là chiếc phao cứu sinh lớn nhất cho trí nhớ và cảm xúc sinh viên. Đêm nay hãy thử tắt màn hình trước 23:00 và nghe tiếng mưa nhẹ cùng MindCare xem sao nhé.';
-      } else if (lower.includes('stress') || lower.includes('cảm xúc')) {
-        replyText = `Tuần này mức stress của bạn duy trì quanh ${latestCheckIn.stress}/10, có xu hướng giảm nhẹ khi bạn duy trì giấc ngủ đủ. Hãy tiếp tục lắng nghe cơ thể mình nhé.`;
+    setChatMessages((prev) => [...prev, userMsg, placeholderAiMsg]);
+    setIsMochiStreaming(true);
+
+    const canSendCheckinContext =
+      consentProfile.allowAiCheckinPersonalize && latestCheckIn.allowAiPersonalize;
+
+    streamMochiChat(
+      {
+        message: text,
+        history: historyPayload,
+        latestCheckIn: canSendCheckinContext
+          ? {
+              mood: latestCheckIn.mood,
+              stress: latestCheckIn.stress,
+              sleepHours: latestCheckIn.sleepHours,
+              allowAiPersonalize: true,
+            }
+          : {
+              mood: 6,
+              stress: 5,
+              sleepHours: 7,
+              allowAiPersonalize: false,
+            },
+      },
+      {
+        onMeta: (meta) => {
+          if (meta.riskSnapshot) {
+            applyIncomingRiskSnapshot(meta.riskSnapshot, meta.openCrisisDrawer);
+          } else if (meta.openCrisisDrawer) {
+            setCrisisDrawerOpen(true);
+          }
+          if (meta.adaptiveScreeningPrompt) {
+            setActiveScreeningPrompt(meta.adaptiveScreeningPrompt);
+          }
+          setChatMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsgId
+                ? {
+                    ...m,
+                    gateRoute: meta.gateRoute,
+                    riskTier: meta.riskSnapshot?.currentTier,
+                    circuitBreakerActivated: meta.circuitBreakerActivated,
+                    isInsightCard: Boolean(meta.insightData),
+                    insightData: meta.insightData,
+                  }
+                : m
+            )
+          );
+        },
+        onChunk: (chunkText) => {
+          setChatMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsgId ? { ...m, text: m.text + chunkText } : m
+            )
+          );
+        },
+        onSafetyRewrite: (fullSafeText) => {
+          setChatMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsgId
+                ? { ...m, text: fullSafeText, safetyRewritten: true }
+                : m
+            )
+          );
+        },
+        onDone: (fullText, outputVerified) => {
+          setChatMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsgId
+                ? {
+                    ...m,
+                    text: fullText || m.text,
+                    outputVerified,
+                  }
+                : m
+            )
+          );
+          setIsMochiStreaming(false);
+        },
       }
-
-      const aiMsg: ChatMessage = {
-        id: 'm-' + (Date.now() + 1),
-        sender: 'assistant',
-        text: replyText,
-        time: timeStr,
-      };
-
-      setChatMessages((prev) => [...prev, aiMsg]);
-    }, 600);
+    ).catch(() => {
+      setIsMochiStreaming(false);
+    });
   };
 
   const [isAiChatActive, setIsAiChatActive] = useState(false);
@@ -294,8 +584,6 @@ export default function App() {
     requestAnimationFrame(() => window.scrollTo({ top: galleryScrollPosition }));
   };
 
-  // Determine whether to show bottom navigation
-  // Suppressed on immersive tasks: checkin, breathing, journal_edit, add_contact, onboarding, or active AI chat
   const hideBottomNav =
     subScreen === 'checkin' ||
     subScreen === 'breathing' ||
@@ -310,17 +598,27 @@ export default function App() {
     subScreen === 'gallery_journal' ||
     (activeTab === 'ai' && isAiChatActive);
 
+  const isComposing =
+    subScreen === 'journal_edit' ||
+    subScreen === 'checkin' ||
+    subScreen === 'sharing' ||
+    subScreen === 'add_contact' ||
+    (activeTab === 'ai' && isAiChatActive);
+
   return (
-    <div className="min-h-screen bg-[var(--color-background)] flex justify-center items-start text-text-primary selection:bg-surface-mint selection:text-primary md:justify-start md:w-full">
-      {/* 12-Screen Quick Inspection Drawer */}
+    <div className="min-h-[100dvh] bg-[var(--color-background)] flex justify-center items-start text-text-primary selection:bg-surface-mint selection:text-primary md:justify-start md:w-full">
+      {/* Quick Inspection & Safety Console Drawer */}
       <ScreenSwitcherDrawer
         currentTab={activeTab}
         currentSub={subScreen}
+        currentRiskTier={riskSnapshot.currentTier}
         onSelectScreen={(tab, sub) => {
           setActiveTab(tab);
           setSubScreen(sub);
           setIsAiChatActive(false);
         }}
+        onOpenCounselorTriage={() => setCounselorDrawerOpen(true)}
+        onOpenCrisisDrawer={() => setCrisisDrawerOpen(true)}
       />
 
       {/* Desktop & Tablet Left Sidebar Navigation */}
@@ -329,6 +627,8 @@ export default function App() {
         subScreen={subScreen}
         currentStreak={currentJournalStreak}
         collapsed={sidebarCollapsed}
+        currentRiskTier={riskSnapshot.currentTier}
+        healthStatus={healthStatus}
         onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
         onSelectTab={(tab) => {
           setActiveTab(tab);
@@ -342,20 +642,25 @@ export default function App() {
           setShowQuickActions(false);
         }}
         onQuickAdd={() => setShowQuickActions(true)}
+        onOpenCrisisDrawer={() => setCrisisDrawerOpen(true)}
+        onOpenCounselorTriage={() => setCounselorDrawerOpen(true)}
       />
 
-      {/* Responsive Container: Mobile preserves 420px phone ratio, Tablet/Desktop expands cleanly */}
-      <main className="w-full max-w-[420px] min-h-screen bg-[var(--color-background)] flex flex-col relative shadow-2xl border-x border-[var(--color-border)] overflow-x-clip md:max-w-none md:flex-1 md:min-w-0 md:shadow-none md:border-x-0">
-        {/* Status bar (Mobile only) */}
+      {/* Responsive Container */}
+      <main className="w-full max-w-[420px] min-h-[100dvh] bg-[var(--color-background)] flex flex-col relative shadow-2xl border-x border-[var(--color-border)] overflow-x-clip md:max-w-none md:flex-1 md:min-w-0 md:shadow-none md:border-x-0">
         <TopStatusBar />
 
-        {/* Dynamic Screen Routing */}
         {subScreen === 'onboarding' ? (
           <OnboardingScreen onStart={() => setSubScreen(null)} />
         ) : subScreen === 'checkin' ? (
           <CheckInModal
             initialCheckIn={latestCheckIn}
+            defaultAllowAi={consentProfile.allowAiCheckinPersonalize}
             onSave={handleSaveCheckIn}
+            onComplete={(targetTab) => {
+              setSubScreen(null);
+              setActiveTab(targetTab);
+            }}
             onClose={() => setSubScreen(null)}
           />
         ) : subScreen === 'breathing' ? (
@@ -369,7 +674,9 @@ export default function App() {
         ) : subScreen === 'journal_edit' ? (
           <JournalEditorScreen
             initialEntry={editingJournal}
+            defaultAllowAiRef={consentProfile.allowAiJournalContext}
             onSave={handleSaveJournal}
+            onDelete={handleDeleteJournal}
             onClose={() => {
               setEditingJournal(null);
               setSubScreen(null);
@@ -388,6 +695,9 @@ export default function App() {
           <SharingFlowScreen
             initialRoute={sharingEntryRoute}
             contacts={contacts}
+            riskSnapshot={riskSnapshot}
+            onRiskSnapshotUpdate={(snap) => applyIncomingRiskSnapshot(snap)}
+            onOpenCrisisSupport={() => setCrisisDrawerOpen(true)}
             onBackHome={returnToHomeFeed}
           />
         ) : subScreen === 'journal_gallery' ? (
@@ -452,14 +762,24 @@ export default function App() {
         ) : subScreen === 'selfcare' ? (
           <SelfCareScreen
             habits={habits}
+            riskSnapshot={riskSnapshot}
+            onRiskSnapshotUpdate={(snap) => applyIncomingRiskSnapshot(snap)}
             onToggleHabit={handleToggleHabit}
             onAddHabit={handleAddHabit}
+            onDeleteHabit={handleDeleteHabit}
+            onEditHabit={handleEditHabit}
+            onOpenSafetyPlan={() => setSubScreen('contacts')}
+            onOpenCrisisDrawer={() => setCrisisDrawerOpen(true)}
             onStartBreathing={() => setSubScreen('breathing')}
             onBack={() => setSubScreen(null)}
           />
         ) : subScreen === 'contacts' ? (
           <TrustedContactsScreen
             contacts={contacts}
+            consentProfile={consentProfile}
+            onUpdateConsent={handleUpdateConsent}
+            onUpdateContact={handleUpdateContact}
+            onDeleteContact={handleDeleteContact}
             onOpenAddContact={() => setSubScreen('add_contact')}
             onBack={() => setSubScreen(null)}
           />
@@ -472,6 +792,13 @@ export default function App() {
           <SettingsScreen
             checkIns={checkIns}
             journals={journals}
+            consentProfile={consentProfile}
+            riskSnapshot={riskSnapshot}
+            healthStatus={healthStatus}
+            onHealthStatusUpdate={setHealthStatus}
+            onUpdateConsent={handleUpdateConsent}
+            onOpenCounselorTriage={() => setCounselorDrawerOpen(true)}
+            onOpenCrisisSafeMode={() => setCrisisDrawerOpen(true)}
             onBack={() => setSubScreen(null)}
           />
         ) : (
@@ -482,6 +809,7 @@ export default function App() {
                 checkIn={latestCheckIn}
                 checkIns={checkIns}
                 journals={journals}
+                riskSnapshot={riskSnapshot}
                 completedExerciseIds={completedExerciseIds}
                 startedExerciseIds={startedExerciseIds}
                 onOpenCheckIn={() => {
@@ -505,6 +833,9 @@ export default function App() {
                   setSharingEntryRoute(route);
                   openHomeDetail('sharing');
                 }}
+                onOpenCrisisDrawer={() => setCrisisDrawerOpen(true)}
+                onOpenSelfCare={() => setSubScreen('selfcare')}
+                onOpenContacts={() => setSubScreen('contacts')}
                 onNavigateTab={(tab) => {
                   setActiveTab(tab);
                   setSubScreen(null);
@@ -515,6 +846,8 @@ export default function App() {
             {activeTab === 'journal' && (
               <JournalScreen
                 entries={journals}
+                checkIns={checkIns}
+                onDeleteJournal={handleDeleteJournal}
                 onOpenGallery={() => {
                   setJournalScrollPosition(window.scrollY);
                   setSubScreen('journal_gallery');
@@ -540,9 +873,17 @@ export default function App() {
               <MindCareAIScreen
                 checkIn={latestCheckIn}
                 messages={chatMessages}
+                isStreaming={isMochiStreaming}
+                riskSnapshot={riskSnapshot}
+                consentProfile={consentProfile}
+                healthStatus={healthStatus}
+                activeScreeningPrompt={activeScreeningPrompt}
                 onSendMessage={handleSendMessage}
                 onOpenBreathing={() => setSubScreen('breathing')}
                 onOpenSettings={() => setSubScreen('settings')}
+                onOpenCrisisDrawer={() => setCrisisDrawerOpen(true)}
+                onRiskSnapshotUpdate={(snap) => applyIncomingRiskSnapshot(snap)}
+                onDismissScreeningPrompt={() => setActiveScreeningPrompt(null)}
                 onActiveChatChange={setIsAiChatActive}
               />
             )}
@@ -557,7 +898,7 @@ export default function App() {
           </>
         )}
 
-        {/* Global Bottom Navigation (Visible on Main Flows) */}
+        {/* Global Bottom Navigation */}
         {!hideBottomNav && (
           <BottomNavigation
             activeTab={activeTab}
@@ -587,7 +928,9 @@ export default function App() {
             >
               <div className="mb-3 flex items-center justify-between">
                 <div>
-                  <h2 className="text-[15px] font-bold text-[var(--color-primary)]">Bạn muốn làm gì?</h2>
+                  <h2 className="text-[15px] font-bold text-[var(--color-primary)]">
+                    Bạn muốn làm gì?
+                  </h2>
                   <p className="mt-0.5 text-[10.5px] text-[var(--color-text-secondary)]">
                     Chọn một hoạt động phù hợp lúc này.
                   </p>
@@ -632,6 +975,28 @@ export default function App() {
           </>
         )}
       </main>
+
+      {/* WHO PFA Crisis Safe Mode Drawer (Auto-opens on L4 or manual Safe Buoy trigger) */}
+      <CrisisSafeModeDrawer
+        isOpen={crisisDrawerOpen}
+        riskSnapshot={riskSnapshot}
+        contacts={contacts}
+        consentProfile={consentProfile}
+        onClose={() => setCrisisDrawerOpen(false)}
+        onOpenBreathing={() => setSubScreen('breathing')}
+        onOpenSafetyPlanEditor={() => setSubScreen('contacts')}
+      />
+
+      {/* Counselor HITL Triage & Audit Verification Console */}
+      <CounselorTriageDrawer
+        isOpen={counselorDrawerOpen}
+        onClose={() => setCounselorDrawerOpen(false)}
+        onRiskStateRefresh={() => {
+          apiClient.getRiskState().then(setRiskSnapshot);
+        }}
+      />
+
+      <PwaUpdatePrompt isComposing={isComposing} />
     </div>
   );
 }

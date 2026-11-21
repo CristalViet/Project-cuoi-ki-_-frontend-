@@ -888,3 +888,107 @@ export const CornerLeaves: React.FC<{ className?: string }> = ({ className = 'w-
   );
 };
 
+/* 10. Cohesive Vector Sprout Companions (replaces cropped/pixelated PNGs cleanly) */
+export const MochiHappyCompanion: React.FC<{ className?: string }> = ({
+  className = 'w-20 h-20',
+}) => (
+  <div className={`relative flex items-center justify-center select-none ${className}`}>
+    <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <ellipse cx="60" cy="104" rx="36" ry="8" fill="var(--color-highlight)" opacity="0.65" />
+      <path d="M60 44V33" stroke="var(--color-primary)" strokeWidth="3.2" strokeLinecap="round" />
+      <path
+        d="M60 33C62 20 76 15 84 20C85 32 72 36 60 33Z"
+        fill="#79C57F"
+        stroke="var(--color-primary)"
+        strokeWidth="2.8"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M59 34C56 22 42 18 35 23C35 35 48 38 59 34Z"
+        fill="#98D99C"
+        stroke="var(--color-primary)"
+        strokeWidth="2.8"
+        strokeLinejoin="round"
+      />
+      <ellipse
+        cx="60"
+        cy="72"
+        rx="36"
+        ry="28"
+        fill="var(--color-highlight)"
+        stroke="var(--color-primary)"
+        strokeWidth="3.2"
+      />
+      <ellipse cx="47" cy="57" rx="10" ry="4.5" fill="var(--color-surface)" opacity="0.8" transform="rotate(-18 47 57)" />
+      <path d="M44 70C46.5 65.5 51.5 65.5 54 70" stroke="var(--color-primary)" strokeWidth="3" strokeLinecap="round" />
+      <path d="M66 70C68.5 65.5 73.5 65.5 76 70" stroke="var(--color-primary)" strokeWidth="3" strokeLinecap="round" />
+      <ellipse cx="38" cy="76" rx="5.5" ry="3.8" fill="#F69D99" opacity="0.85" />
+      <ellipse cx="82" cy="76" rx="5.5" ry="3.8" fill="#F69D99" opacity="0.85" />
+      <path d="M56 76C58 80 62 80 64 76" stroke="var(--color-primary)" strokeWidth="2.6" strokeLinecap="round" />
+      <path d="M92 42L94 47L99 49L94 51L92 56L90 51L85 49L90 47Z" fill="var(--color-secondary)" />
+    </svg>
+  </div>
+);
+
+export const MochiThinkingCompanion: React.FC<{ className?: string }> = ({
+  className = 'w-20 h-20',
+}) => (
+  <div className={`relative flex items-center justify-center select-none ${className}`}>
+    <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <ellipse cx="60" cy="104" rx="35" ry="7.5" fill="var(--color-highlight)" opacity="0.6" />
+      <circle cx="92" cy="30" r="8" fill="var(--color-surface)" stroke="var(--color-primary)" strokeWidth="2.2" />
+      <circle cx="82" cy="42" r="4" fill="var(--color-surface)" stroke="var(--color-primary)" strokeWidth="2" />
+      <path d="M90 30C90 28 94 28 94 30C94 32 92 33 92 34" stroke="var(--color-secondary)" strokeWidth="2" strokeLinecap="round" />
+      <path d="M58 46V35" stroke="var(--color-primary)" strokeWidth="3" strokeLinecap="round" />
+      <path d="M58 35C60 22 74 18 81 23C82 34 70 37 58 35Z" fill="#79C57F" stroke="var(--color-primary)" strokeWidth="2.6" strokeLinejoin="round" />
+      <path d="M57 36C54 24 41 21 34 26C35 36 47 39 57 36Z" fill="#98D99C" stroke="var(--color-primary)" strokeWidth="2.6" strokeLinejoin="round" />
+      <ellipse cx="58" cy="73" rx="35" ry="27" fill="var(--color-highlight)" stroke="var(--color-primary)" strokeWidth="3.2" />
+      <circle cx="46" cy="70" r="3" fill="var(--color-primary)" />
+      <circle cx="70" cy="70" r="3" fill="var(--color-primary)" />
+      <ellipse cx="38" cy="76" rx="5" ry="3.5" fill="#F69D99" opacity="0.8" />
+      <ellipse cx="78" cy="76" rx="5" ry="3.5" fill="#F69D99" opacity="0.8" />
+      <path d="M55 78C57 77 60 77 62 78" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" />
+      <ellipse cx="67" cy="86" rx="6.5" ry="5" fill="#E7F1DF" stroke="var(--color-primary)" strokeWidth="2.2" />
+    </svg>
+  </div>
+);
+
+export const MochiRestingCompanion: React.FC<{ className?: string }> = ({
+  className = 'w-20 h-20',
+}) => (
+  <div className={`relative flex items-center justify-center select-none ${className}`}>
+    <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <ellipse cx="60" cy="102" rx="40" ry="9" fill="#DDEBCF" opacity="0.75" />
+      <path d="M60 48V38" stroke="var(--color-primary)" strokeWidth="3" strokeLinecap="round" />
+      <path d="M60 38C63 26 76 22 83 27C83 37 71 40 60 38Z" fill="#79C57F" stroke="var(--color-primary)" strokeWidth="2.6" strokeLinejoin="round" />
+      <path d="M59 39C55 28 42 25 36 30C37 39 49 42 59 39Z" fill="#98D99C" stroke="var(--color-primary)" strokeWidth="2.6" strokeLinejoin="round" />
+      <ellipse cx="60" cy="76" rx="37" ry="25" fill="var(--color-highlight)" stroke="var(--color-primary)" strokeWidth="3.2" />
+      <path d="M44 74C46.5 77 51.5 77 54 74" stroke="var(--color-primary)" strokeWidth="2.8" strokeLinecap="round" />
+      <path d="M66 74C68.5 77 73.5 77 76 74" stroke="var(--color-primary)" strokeWidth="2.8" strokeLinecap="round" />
+      <ellipse cx="38" cy="79" rx="5.5" ry="3.5" fill="#F69D99" opacity="0.8" />
+      <ellipse cx="82" cy="79" rx="5.5" ry="3.5" fill="#F69D99" opacity="0.8" />
+      <path d="M57 81C59 83 61 83 63 81" stroke="var(--color-primary)" strokeWidth="2.3" strokeLinecap="round" />
+      <text x="86" y="42" fill="var(--color-primary)" fontSize="12" fontWeight="700" opacity="0.7">z</text>
+      <text x="94" y="32" fill="var(--color-secondary)" fontSize="14" fontWeight="700" opacity="0.85">Z</text>
+    </svg>
+  </div>
+);
+
+export const WarmGiftEnvelopeVector: React.FC<{ className?: string }> = ({
+  className = 'w-14 h-14',
+}) => (
+  <div className={`relative flex items-center justify-center select-none ${className}`}>
+    <svg viewBox="0 0 88 88" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <ellipse cx="44" cy="76" rx="26" ry="5.5" fill="var(--color-highlight)" opacity="0.65" />
+      <rect x="14" y="26" width="60" height="44" rx="12" fill="#FFF8EF" stroke="var(--color-primary)" strokeWidth="2.8" />
+      <path d="M16 30L44 51L72 30" stroke="var(--color-primary)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="44" cy="48" r="9" fill="#FFF0E1" stroke="var(--color-secondary)" strokeWidth="2.2" />
+      <path
+        d="M44 45.2C42.7 43.4 40 43.7 39.2 45.4C38.2 47.6 40.6 50 44 52.5C47.4 50 49.8 47.6 48.8 45.4C48 43.7 45.3 43.4 44 45.2Z"
+        fill="#E78A45"
+      />
+      <path d="M68 16L69.5 20L73.5 21.5L69.5 23L68 27L66.5 23L62.5 21.5L66.5 20Z" fill="var(--color-secondary)" />
+    </svg>
+  </div>
+);
+

@@ -1,9 +1,23 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { TrustedContact } from '../types';
+import { CommunityLetterDTO, RiskSnapshot, TrustedContact } from '../types';
 import { LetterboxArtwork } from './LetterboxArtwork';
 import { DesktopMailboxBackdrop, HeaderFlowerCluster } from './DesktopMailboxStage';
+import { apiClient, detectOfflineTextRisk } from '../services/apiClient';
+import {
+  MochiHappyCompanion,
+  MochiThinkingCompanion,
+  WarmGiftEnvelopeVector,
+} from './MochiIllustrations';
 
 export type SharingEntryRoute = 'feed' | 'recipients';
+
+const LETTER_TOPICS = [
+  'Học tập',
+  'Cảm xúc',
+  'Gia đình',
+  'Định hướng',
+  'Cuộc sống',
+] as const;
 
 type SharingRoute =
   | SharingEntryRoute
@@ -24,6 +38,7 @@ type PaperMailboxView = 'check' | 'reply' | 'letter' | 'archive' | 'mine';
 interface CommunityLetter {
   id: string;
   alias: string;
+  title?: string;
   content: string;
   topic: string;
   time: string;
@@ -33,6 +48,8 @@ interface CommunityLetter {
   opened?: boolean;
   isOwn?: boolean;
   status?: ModerationStatus;
+  decision?: string;
+  contentWarning?: string | null;
 }
 
 interface Reply {
@@ -40,19 +57,74 @@ interface Reply {
   alias: string;
   content: string;
   time: string;
+  contentWarning?: string | null;
 }
 
 interface PrivateMessage {
   id: string;
-  sender: 'me' | 'them';
+  sender: 'me';
   text: string;
   time: string;
-  unread?: boolean;
+}
+
+const PRIVATE_DRAFTS_STORAGE_KEY = 'mindcare_private_message_drafts_v1';
+const BLOCKED_COMMUNITY_TOPICS_STORAGE_KEY = 'mindcare_blocked_community_topics_v1';
+const BLOCKED_PRIVATE_CONTACTS_STORAGE_KEY = 'mindcare_blocked_private_contacts_v1';
+
+function readLocalSetting<T>(key: string, fallback: T): T {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved === null ? fallback : (JSON.parse(saved) as T);
+  } catch {
+    return fallback;
+  }
+}
+
+function readStringArraySetting(key: string): string[] {
+  const value = readLocalSetting<unknown>(key, []);
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
+function persistLocalSetting<T>(key: string, value: T): boolean {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function readPrivateDrafts(): Record<string, PrivateMessage[]> {
+  try {
+    const value: unknown = JSON.parse(localStorage.getItem(PRIVATE_DRAFTS_STORAGE_KEY) || 'null');
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+    return Object.fromEntries(
+      Object.entries(value).map(([contactId, drafts]) => [
+        contactId,
+        Array.isArray(drafts)
+          ? drafts.filter(
+              (draft): draft is PrivateMessage =>
+                Boolean(draft) &&
+                typeof draft === 'object' &&
+                (draft as PrivateMessage).sender === 'me' &&
+                typeof (draft as PrivateMessage).id === 'string' &&
+                typeof (draft as PrivateMessage).text === 'string' &&
+                typeof (draft as PrivateMessage).time === 'string'
+            )
+          : [],
+      ])
+    );
+  } catch {
+    return {};
+  }
 }
 
 interface SharingFlowScreenProps {
   initialRoute: SharingEntryRoute;
   contacts: TrustedContact[];
+  riskSnapshot?: RiskSnapshot;
+  onRiskSnapshotUpdate?: (snapshot: RiskSnapshot) => void;
+  onOpenCrisisSupport?: () => void;
   onBackHome: () => void;
 }
 
@@ -86,12 +158,13 @@ const INITIAL_LETTERS: CommunityLetter[] = [
     id: 'letter-3',
     alias: 'Hạt mưa nhỏ',
     content:
-      'Mình đang băn khoăn về công việc hiện tại. Dù đã cố gắng, mình vẫn không biết có nên tiếp tục hay cho phép bản thân bắt đầu lại từ đầu.',
+      'Mình đang băn khoăn và kiệt sức khá nhiều về công việc hiện tại. Dù đã cố gắng, mình vẫn không biết có nên tiếp tục hay cho phép bản thân bắt đầu lại từ đầu.',
     topic: 'Công việc',
     time: '1 ngày trước',
     date: '07/11/2026',
     replyCount: 5,
     repliesAllowed: true,
+    contentWarning: 'Chia sẻ có đề cập cảm giác kiệt sức và mất phương hướng kéo dài.',
   },
   {
     id: 'letter-4',
@@ -199,13 +272,15 @@ const EnvelopeCard: React.FC<{
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
           <h3 className="truncate text-[13.5px] font-bold text-[#3E4F42]">{letter.alias}</h3>
-          <span className="shrink-0 text-[9px] text-[#82776C]">{letter.time}</span>
+          <span className="shrink-0 text-[11.5px] text-[#82776C]">{letter.time}</span>
         </div>
-        <p className="mt-1 line-clamp-2 text-[10.5px] leading-4 text-[#665F58]">
-          {letter.content}
+        <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-[#665F58]">
+          {letter.contentWarning
+            ? `⚠️ Nội dung nhạy cảm: ${letter.contentWarning}`
+            : letter.content}
         </p>
-        <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#FFF9F0]/85 px-2.5 py-1 text-[9.5px] font-bold text-[#7A674F]">
-          <span className="material-symbols-outlined text-[13px]">menu_book</span>
+        <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#FFF9F0]/85 px-2.5 py-1 text-[11.5px] font-bold text-[#7A674F]">
+          <span className="material-symbols-outlined text-[14px]">menu_book</span>
           {letter.topic}
         </span>
       </div>
@@ -222,12 +297,58 @@ const EnvelopeCard: React.FC<{
 const statusMeta: Record<ModerationStatus, { label: string; className: string }> = {
   pending: { label: 'Đang chờ duyệt', className: 'bg-[#FFF0D5] text-[#8A693C]' },
   published: { label: 'Đã phát hành', className: 'bg-[var(--color-highlight)] text-[var(--color-primary)]' },
-  hidden: { label: 'Đã ẩn', className: 'bg-[var(--color-border)] text-[#707A73]' },
+  hidden: { label: 'Riêng tư / Bảo vệ an toàn', className: 'bg-[#FFEFE5] text-[#9E472A]' },
+};
+
+const ContentWarningBox: React.FC<{
+  warningText: string;
+  isRevealed: boolean;
+  onReveal: () => void;
+  children: React.ReactNode;
+}> = ({ warningText, isRevealed, onReveal, children }) => {
+  if (isRevealed) {
+    return (
+      <div className="space-y-2">
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-[#FFF4E6] border border-[#ECCEA8] px-3 py-1 text-[11.5px] font-bold text-[#9A5B25]">
+          <span className="material-symbols-outlined text-[14px]">visibility</span>
+          <span>Nhãn nội dung nhạy cảm (Đã mở xem)</span>
+        </div>
+        {children}
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-[#EBD2B4] bg-[#FFF8EF] p-4 space-y-3 text-left">
+      <div className="flex items-start gap-2.5">
+        <span className="material-symbols-outlined text-[20px] text-[#E78A45] mt-0.5 shrink-0">
+          shield_with_heart
+        </span>
+        <div>
+          <p className="text-[12.5px] font-bold text-[#8A4F22]">
+            Cảnh báo nội dung nhạy cảm (Content Warning)
+          </p>
+          <p className="text-[12px] leading-relaxed text-[#6E5D4F] mt-0.5">{warningText}</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onReveal}
+        className="inline-flex items-center gap-1.5 rounded-full bg-[#1F5C43] px-4 py-2 text-[12px] font-bold text-white shadow-2xs hover:brightness-105 active:scale-95 transition-all cursor-pointer"
+      >
+        <span className="material-symbols-outlined text-[16px]">visibility</span>
+        <span>Mình sẵn sàng — Bấm để mở xem nội dung</span>
+      </button>
+    </div>
+  );
 };
 
 export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
   initialRoute,
   contacts,
+  riskSnapshot,
+  onRiskSnapshotUpdate,
+  onOpenCrisisSupport,
   onBackHome,
 }) => {
   const [route, setRoute] = useState<SharingRoute>(initialRoute);
@@ -235,15 +356,22 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
   const [mailboxTab, setMailboxTab] = useState<'inbox' | 'mine'>('inbox');
   const [letters, setLetters] = useState<CommunityLetter[]>(INITIAL_LETTERS);
   const [hiddenLetterIds, setHiddenLetterIds] = useState<string[]>([]);
+  const [blockedCommunityTopics, setBlockedCommunityTopics] = useState<string[]>(() =>
+    readStringArraySetting(BLOCKED_COMMUNITY_TOPICS_STORAGE_KEY)
+  );
+  const [blockedPrivateContactIds, setBlockedPrivateContactIds] = useState<string[]>(() =>
+    readStringArraySetting(BLOCKED_PRIVATE_CONTACTS_STORAGE_KEY)
+  );
   const [selectedLetter, setSelectedLetter] = useState<CommunityLetter>(INITIAL_LETTERS[0]);
   const [animationStage, setAnimationStage] = useState<AnimationStage>('opening');
   const [selectedLetterId, setSelectedLetterId] = useState<string | null>(null);
   const [postText, setPostText] = useState(
     () => localStorage.getItem('mindcare_anonymous_letter_draft') || ''
   );
-  const [postTopic] = useState('Cảm xúc');
-  const [allowReplies] = useState(true);
+  const [postTopic, setPostTopic] = useState<string>('Cảm xúc');
+  const [allowReplies, setAllowReplies] = useState<boolean>(true);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isLoadingLetters, setIsLoadingLetters] = useState(true);
   const [replies, setReplies] = useState<Reply[]>(INITIAL_REPLIES);
   const [paperMailboxView, setPaperMailboxView] = useState<PaperMailboxView>('check');
   const [handledReplyIds, setHandledReplyIds] = useState<string[]>(['reply-2']);
@@ -267,28 +395,110 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
   const [privateText, setPrivateText] = useState('');
   const [showSendConfirm, setShowSendConfirm] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [messages, setMessages] = useState<PrivateMessage[]>([
-    {
-      id: 'message-1',
-      sender: 'me',
-      text: 'Hôm nay mình hơi mệt và muốn chia sẻ một chút...',
-      time: '14:20',
-    },
-    {
-      id: 'message-2',
-      sender: 'them',
-      text: 'Cảm ơn bạn đã tin tưởng chia sẻ với mình. Mình luôn sẵn sàng lắng nghe.',
-      time: '14:32',
-      unread: true,
-    },
-  ]);
+  const [isSendingConversationMsg, setIsSendingConversationMsg] = useState(false);
+  const [messagesByContact, setMessagesByContact] = useState<Record<string, PrivateMessage[]>>(
+    readPrivateDrafts
+  );
   const [conversationText, setConversationText] = useState('');
   const [showConversationMenu, setShowConversationMenu] = useState(false);
-  const [receivingMessages, setReceivingMessages] = useState(true);
   const [toast, setToast] = useState('');
+  const [revealedCwIds, setRevealedCwIds] = useState<string[]>([]);
+  const [lastPublishDecision, setLastPublishDecision] = useState<
+    'SAFE_PUBLISH' | 'SENSITIVE_WITH_CW'
+  >('SAFE_PUBLISH');
+  const [moderationModal, setModerationModal] = useState<{
+    decision: 'BLOCK_TOXIC_BULLYING' | 'SELF_HARM_INTERCEPT';
+    message: string;
+    openSupportPrompt: boolean;
+    source?: 'letter' | 'reply' | 'private_message';
+  } | null>(null);
+
+  const revealContentWarning = (id: string) => {
+    setRevealedCwIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  };
   const reduceMotion =
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const currentREff = riskSnapshot?.rEff ?? 0;
+  const shieldSensitive = currentREff >= 0.45;
+
+  // Fetch live community letters & enforce Safe Matching Rule (Werther Contagion Shield)
+  useEffect(() => {
+    let active = true;
+    setIsLoadingLetters(true);
+
+    apiClient
+      .getCommunityLetters()
+      .then((remoteDtos) => {
+        if (!active || !Array.isArray(remoteDtos)) return;
+
+        setLetters((current) => {
+          const existingById = new Map(current.map((item) => [item.id, item]));
+          const mappedRemote: CommunityLetter[] = remoteDtos.map((dto) => ({
+            id: dto.id,
+            alias: dto.alias || 'Một chiếc lá nhỏ',
+            title: dto.title,
+            content: dto.content,
+            topic: dto.topic || 'Cảm xúc',
+            time: dto.time || 'Gần đây',
+            date: dto.date || 'Hôm nay',
+            replyCount: dto.replyCount ?? 0,
+            repliesAllowed: dto.repliesAllowed ?? true,
+            opened: existingById.get(dto.id)?.opened ?? false,
+            isOwn: Boolean(dto.isOwn),
+            status: dto.status || 'published',
+            decision:
+              dto.decision || (dto.contentWarning ? 'SENSITIVE_WITH_CW' : 'SAFE_PUBLISH'),
+            contentWarning: dto.contentWarning || null,
+          }));
+
+          const merged: CommunityLetter[] = [];
+          const seenIds = new Set<string>();
+
+          const pushUnique = (item: CommunityLetter) => {
+            if (seenIds.has(item.id)) return;
+            if (
+              !item.isOwn &&
+              (riskSnapshot?.rEff ?? 0) >= 0.45 &&
+              (item.decision === 'SENSITIVE_WITH_CW' || Boolean(item.contentWarning))
+            ) {
+              return;
+            }
+            seenIds.add(item.id);
+            merged.push(item);
+          };
+
+          // 1. Preserve user-authored letters created in the current session first
+          for (const item of current) {
+            if (item.id.startsWith('letter-local-')) {
+              pushUnique(item);
+            }
+          }
+
+          // 2. Merge live Backend / API community letters
+          for (const item of mappedRemote) {
+            pushUnique(item);
+          }
+
+          // 3. Keep user's existing own letters (or fallback letters if remote returned empty) without duplicate IDs
+          for (const item of current) {
+            if (item.isOwn || mappedRemote.length === 0) {
+              pushUnique(item);
+            }
+          }
+
+          return merged;
+        });
+      })
+      .finally(() => {
+        if (active) setIsLoadingLetters(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [currentREff]);
 
   useEffect(() => {
     localStorage.setItem('mindcare_anonymous_letter_draft', postText);
@@ -330,13 +540,25 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
   };
 
   const incomingLetters = letters.filter(
-    (letter) => !letter.isOwn && !hiddenLetterIds.includes(letter.id)
+    (letter) =>
+      !letter.isOwn &&
+      !hiddenLetterIds.includes(letter.id) &&
+      !blockedCommunityTopics.includes(letter.topic) &&
+      !(
+        shieldSensitive &&
+        (letter.decision === 'SENSITIVE_WITH_CW' || Boolean(letter.contentWarning))
+      )
   );
   const myLetters = letters.filter((letter) => letter.isOwn);
   const pendingReplies = replies.filter((reply) => !handledReplyIds.includes(reply.id));
   const archivedReplies = replies.filter((reply) => archivedReplyIds.includes(reply.id));
   const pendingPaperLetters = incomingLetters.filter(
-    (letter) => !handledPaperLetterIds.includes(letter.id)
+    (letter) =>
+      !handledPaperLetterIds.includes(letter.id) &&
+      !(
+        shieldSensitive &&
+        (letter.decision === 'SENSITIVE_WITH_CW' || Boolean(letter.contentWarning))
+      )
   );
   const activeReply =
     replies.find((reply) => reply.id === activeReplyId) ?? pendingReplies[0] ?? replies[0];
@@ -355,6 +577,10 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
           contact.name.toLowerCase().includes(recipientSearch.toLowerCase())
       ),
     [contacts, recipientSearch]
+  );
+  const messages = selectedContact ? messagesByContact[selectedContact.id] || [] : [];
+  const isSelectedContactBlocked = Boolean(
+    selectedContact && blockedPrivateContactIds.includes(selectedContact.id)
   );
 
   const finishOpen = () => {
@@ -434,11 +660,60 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
     }, reduceMotion ? 80 : 900);
   };
 
-  const publishLetter = () => {
+  const publishLetter = async () => {
+    if (!postText.trim() || isPublishing) return;
     setIsPublishing(true);
-    window.setTimeout(() => {
+    try {
+      const modRes = await apiClient.moderateContent({
+        contentType: 'letter',
+        content: postText.trim(),
+        topic: postTopic,
+      });
+      onRiskSnapshotUpdate?.(modRes.riskSnapshot);
+
+      if (modRes.decision === 'BLOCK_TOXIC_BULLYING') {
+        setModerationModal({
+          decision: 'BLOCK_TOXIC_BULLYING',
+          message:
+            modRes.empatheticInterceptMessage ||
+            'Hòm thư MindCare là góc nhỏ tử tế để lắng nghe không phán xét. Mình cùng điều chỉnh lại vài từ ngữ nặng nề trước khi gửi nhé.',
+          openSupportPrompt: false,
+          source: 'letter',
+        });
+        return;
+      }
+
+      if (modRes.decision === 'SELF_HARM_INTERCEPT') {
+        const privateSavedLetter: CommunityLetter = {
+          id: `letter-local-${Date.now()}`,
+          alias: 'Mầm lá nhỏ',
+          content: postText.trim(),
+          topic: postTopic,
+          time: 'Vừa xong',
+          date: new Intl.DateTimeFormat('vi-VN').format(new Date()),
+          replyCount: 0,
+          repliesAllowed: false,
+          isOwn: true,
+          status: 'hidden',
+          decision: 'SELF_HARM_INTERCEPT',
+        };
+        setLetters((current) => [privateSavedLetter, ...current]);
+        localStorage.removeItem('mindcare_anonymous_letter_draft');
+        setPostText('');
+        setModerationModal({
+          decision: 'SELF_HARM_INTERCEPT',
+          message:
+            modRes.empatheticInterceptMessage ||
+            'Mochi cảm nhận được bạn đang mang một nỗi đau rất lớn trong lòng. Lá thư đã được giữ ở chế độ riêng tư chỉ mình bạn thấy để bảo vệ bạn. Hãy để Mochi đưa bạn sang không gian hỗ trợ an toàn ngay lúc này nhé.',
+          openSupportPrompt: true,
+          source: 'letter',
+        });
+        return;
+      }
+
+      const isCw = modRes.decision === 'SENSITIVE_WITH_CW';
       const letter: CommunityLetter = {
-        id: `letter-${Date.now()}`,
+        id: `letter-local-${Date.now()}`,
         alias: 'Mầm lá nhỏ',
         content: postText.trim(),
         topic: postTopic,
@@ -447,51 +722,202 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
         replyCount: 0,
         repliesAllowed: allowReplies,
         isOwn: true,
-        status: 'pending',
+        status: 'published',
+        decision: modRes.decision,
+        contentWarning: isCw
+          ? modRes.contentWarning ||
+            'Chia sẻ có đề cập cảm xúc nhạy cảm. Hãy mở đọc khi tâm trí bạn sẵn sàng.'
+          : null,
       };
       setLetters((current) => [letter, ...current]);
       setSelectedLetter(letter);
+      setLastPublishDecision(isCw ? 'SENSITIVE_WITH_CW' : 'SAFE_PUBLISH');
       localStorage.removeItem('mindcare_anonymous_letter_draft');
       setPostText('');
-      setIsPublishing(false);
       setHistory([]);
       setRoute('post-complete');
-    }, 750);
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
-  const sendReply = () => {
+  const sendReply = async () => {
+    if (!replyText.trim() || isReplySending) return;
     setIsReplySending(true);
-    window.setTimeout(() => {
+    try {
+      const modRes = await apiClient.moderateContent({
+        contentType: 'reply',
+        content: replyText.trim(),
+        topic: selectedLetter.topic,
+      });
+      onRiskSnapshotUpdate?.(modRes.riskSnapshot);
+
+      if (modRes.decision === 'BLOCK_TOXIC_BULLYING') {
+        setModerationModal({
+          decision: 'BLOCK_TOXIC_BULLYING',
+          message:
+            modRes.empatheticInterceptMessage ||
+            'Lời hồi đáp có chứa cụm từ có thể gây tổn thương cho người viết thư. Mình cùng viết lại nhẹ nhàng và tử tế hơn nhé.',
+          openSupportPrompt: false,
+          source: 'reply',
+        });
+        return;
+      }
+
+      if (modRes.decision === 'SELF_HARM_INTERCEPT') {
+        setModerationModal({
+          decision: 'SELF_HARM_INTERCEPT',
+          message:
+            modRes.empatheticInterceptMessage ||
+            'Mochi nhận thấy bạn cũng đang trải qua khoảnh khắc rất nặng nề. Lời nhắn đã được giữ lại an toàn — hãy để Mochi kết nối bạn với điểm tựa hỗ trợ ngay lúc này nhé.',
+          openSupportPrompt: true,
+          source: 'reply',
+        });
+        return;
+      }
+
+      const newReply: Reply = {
+        id: `reply-${Date.now()}`,
+        alias: 'Mầm lá nhỏ',
+        content: replyText.trim(),
+        time: 'Vừa xong',
+        contentWarning:
+          modRes.decision === 'SENSITIVE_WITH_CW'
+            ? modRes.contentWarning ||
+              'Phản hồi có nhắc tới trải nghiệm cảm xúc nhạy cảm. Bấm để mở xem khi sẵn sàng.'
+            : null,
+      };
+      setReplies((prev) => [newReply, ...prev]);
       localStorage.removeItem('mindcare_letter_reply_draft');
       setReplyText('');
-      setIsReplySending(false);
       setHistory([]);
       setRoute('feed');
       runPaperHandoff(selectedLetter.id);
-    }, 700);
+    } finally {
+      setIsReplySending(false);
+    }
   };
 
-  const sendPrivateMessage = () => {
-    setIsSending(true);
-    window.setTimeout(() => {
-      setMessages((current) => [
-        ...current,
-        {
-          id: `message-${Date.now()}`,
-          sender: 'me',
-          text: privateText.trim(),
-          time: new Intl.DateTimeFormat('vi-VN', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-          }).format(new Date()),
-        },
-      ]);
+  const storePrivateDraft = (contactId: string, text: string): boolean => {
+    const draft: PrivateMessage = {
+      id: `draft-${Date.now()}`,
+      sender: 'me',
+      text,
+      time: new Intl.DateTimeFormat('vi-VN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }).format(new Date()),
+    };
+    const nextMessages = [...(messagesByContact[contactId] || []), draft];
+    const nextByContact = { ...messagesByContact, [contactId]: nextMessages };
+    if (!persistLocalSetting(PRIVATE_DRAFTS_STORAGE_KEY, nextByContact)) {
+      showToast('Không thể lưu bản nháp trên thiết bị. Hãy kiểm tra dung lượng trình duyệt.');
+      return false;
+    }
+    setMessagesByContact(nextByContact);
+    return true;
+  };
+
+  const interceptUnsafePrivateDraft = (text: string): boolean => {
+    const scan = detectOfflineTextRisk(text);
+    if (scan.isToxic) {
+      setModerationModal({
+        decision: 'BLOCK_TOXIC_BULLYING',
+        message: 'Lời nháp có thể gây tổn thương. Hãy sửa lại bằng cách diễn đạt tôn trọng hơn.',
+        openSupportPrompt: false,
+        source: 'private_message',
+      });
+      return true;
+    }
+    if (scan.level === 'L3' || scan.level === 'L4') {
+      setModerationModal({
+        decision: 'SELF_HARM_INTERCEPT',
+        message:
+          'Bản kiểm tra cục bộ nhận thấy nội dung này có thể liên quan đến một thời điểm rất khó khăn. Bản nháp vẫn ở trong trình soạn thảo trên thiết bị và chưa được gửi. Hãy mở Phao An Toàn để tìm hỗ trợ ngay lúc này.',
+        openSupportPrompt: true,
+        source: 'private_message',
+      });
+      return true;
+    }
+    return false;
+  };
+
+  const savePrivateMessageDraft = () => {
+    if (!privateText.trim() || !selectedContact || isSending) return;
+    if (blockedPrivateContactIds.includes(selectedContact.id)) {
+      showToast('Liên hệ này đang bị chặn trên thiết bị.');
+      return;
+    }
+    if (interceptUnsafePrivateDraft(privateText.trim())) {
       setShowSendConfirm(false);
-      setIsSending(false);
+      return;
+    }
+    setIsSending(true);
+    const didSave = storePrivateDraft(selectedContact.id, privateText.trim());
+    setIsSending(false);
+    if (!didSave) return;
+    setPrivateText('');
+    setShowSendConfirm(false);
+    setHistory([]);
+    setRoute('message-complete');
+  };
+
+  const submitConversationMsg = () => {
+    if (!conversationText.trim() || !selectedContact || isSendingConversationMsg) return;
+    if (blockedPrivateContactIds.includes(selectedContact.id)) {
+      showToast('Liên hệ này đang bị chặn trên thiết bị.');
+      return;
+    }
+    if (interceptUnsafePrivateDraft(conversationText.trim())) return;
+    setIsSendingConversationMsg(true);
+    const didSave = storePrivateDraft(selectedContact.id, conversationText.trim());
+    setIsSendingConversationMsg(false);
+    if (!didSave) return;
+    setConversationText('');
+    showToast('Đã lưu bản nháp trên thiết bị. Chưa gửi đến người nhận.');
+  };
+
+  const setCommunityTopicBlocked = (topic: string, shouldBlock: boolean) => {
+    const nextTopics = shouldBlock
+      ? [...new Set([...blockedCommunityTopics, topic])]
+      : blockedCommunityTopics.filter((item) => item !== topic);
+    if (!persistLocalSetting(BLOCKED_COMMUNITY_TOPICS_STORAGE_KEY, nextTopics)) {
+      showToast('Không thể cập nhật bộ lọc chủ đề trên thiết bị.');
+      return;
+    }
+    setBlockedCommunityTopics(nextTopics);
+    setShowLetterMenu(false);
+    setHistory([]);
+    setRoute('feed');
+    showToast(
+      shouldBlock
+        ? `Đã ẩn thư chủ đề ${topic} khỏi hòm thư trên thiết bị.`
+        : `Đã bật lại thư chủ đề ${topic}.`
+    );
+  };
+
+  const togglePrivateContactBlock = (contact: TrustedContact) => {
+    const shouldBlock = !blockedPrivateContactIds.includes(contact.id);
+    const nextBlockedIds = shouldBlock
+      ? [...blockedPrivateContactIds, contact.id]
+      : blockedPrivateContactIds.filter((id) => id !== contact.id);
+    if (!persistLocalSetting(BLOCKED_PRIVATE_CONTACTS_STORAGE_KEY, nextBlockedIds)) {
+      showToast('Không thể cập nhật danh sách chặn trên thiết bị.');
+      return;
+    }
+    setBlockedPrivateContactIds(nextBlockedIds);
+    setShowConversationMenu(false);
+    if (shouldBlock) {
+      setSelectedContact(null);
       setHistory([]);
-      setRoute('message-complete');
-    }, 750);
+      setRoute('recipients');
+    }
+    showToast(
+      shouldBlock
+        ? 'Đã chặn người này trên thiết bị. Bản nháp cũ vẫn được giữ riêng.'
+        : 'Đã bỏ chặn người này trên thiết bị.'
+    );
   };
 
   const renderMailboxShell = (
@@ -561,7 +987,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
             <span className="material-symbols-outlined text-[18px] text-[#1F5C43]">inventory_2</span>
             <span>Hộp lưu trữ</span>
             {archivedReplies.length > 0 && (
-              <span className="ml-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-secondary)] px-1 text-[9.5px] font-bold text-white tabular-nums">
+              <span className="ml-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-secondary)] px-1.5 text-[11.5px] font-bold text-white tabular-nums">
                 {archivedReplies.length}
               </span>
             )}
@@ -618,7 +1044,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
                   type="button"
                 >
                   <span className="material-symbols-outlined text-[18px] text-[#1F5C43]">group</span>
-                  <span>Nhắn người tin cậy</span>
+                  <span>Soạn bản nháp riêng cho người tin cậy</span>
                 </button>
               </div>
             )}
@@ -668,7 +1094,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
               <div className="absolute right-0 top-12 z-50 w-56 rounded-2xl border border-[var(--color-border)] bg-white p-2 shadow-xl">
                 <div className="border-b border-[var(--color-border)]/70 px-2.5 py-2">
                   <p className="text-[13px] font-bold text-[var(--color-text-primary)]">Minh Nguyễn</p>
-                  <p className="text-[11px] text-[var(--color-text-secondary)]">Ẩn danh · Biệt danh: Mầm lá nhỏ</p>
+                  <p className="text-[11.5px] text-[var(--color-text-secondary)]">Ẩn danh · Biệt danh: Mầm lá nhỏ</p>
                 </div>
                 <button
                   onClick={() => {
@@ -679,7 +1105,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
                   type="button"
                 >
                   <span className="material-symbols-outlined text-[18px]">group</span>
-                  <span>Nhắn người tin cậy</span>
+                  <span>Soạn bản nháp riêng cho người tin cậy</span>
                 </button>
                 <button
                   onClick={() => {
@@ -726,11 +1152,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
         {paperHandoffActive && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-[var(--color-background)]/82 backdrop-blur-sm">
             <div className="paper-boat-handoff flex flex-col items-center">
-              <img
-                src="/assets/MindCare_2D_Assets/characters/mochi_happy.png"
-                alt="Mochi đang trao lá thư cho người đưa thư"
-                className="h-28 w-28 object-contain [image-rendering:pixelated]"
-              />
+              <MochiHappyCompanion className="h-28 w-28" />
               <svg width="150" height="82" viewBox="0 0 150 82" aria-hidden="true">
                 <path d="M8 31L72 9L141 31L116 69H35Z" fill="white" stroke="var(--color-primary)" strokeWidth="3" strokeLinejoin="round" />
                 <path d="M8 31H141L76 48Z" fill="var(--color-highlight)" stroke="var(--color-primary)" strokeWidth="3" strokeLinejoin="round" />
@@ -777,9 +1199,14 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
             <div className="hidden h-[46px] w-[46px] md:block" />
           </div>
 
-          {/* Mobile list (<768px): preserved unchanged */}
+          {/* Mobile list (<768px): preserved with warm skeleton */}
           <div className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1 md:hidden">
-            {myLetters.length === 0 ? (
+            {isLoadingLetters ? (
+              <div className="space-y-3" aria-label="Đang tải thư của bạn">
+                <div className="skeleton-warm animate-pulse h-36 w-full rounded-[20px] bg-[#F3ECE0] border border-[#E7DCC9]" />
+                <div className="skeleton-warm animate-pulse h-36 w-full rounded-[20px] bg-[#F3ECE0] border border-[#E7DCC9]" />
+              </div>
+            ) : myLetters.length === 0 ? (
               <div className="rounded-[24px] border border-dashed border-[var(--color-border)] bg-white/90 p-8 text-center shadow-sm">
                 <span className="material-symbols-outlined text-[32px] text-[var(--color-secondary)]">mail_outline</span>
                 <p className="mt-2 text-[14px] font-bold text-[var(--color-primary)]">Bạn chưa gửi lá thư nào</p>
@@ -792,10 +1219,10 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
                 <div key={letter.id} className="space-y-1.5">
                   {letter.status && (
                     <div className="flex items-center justify-between px-1">
-                      <span className={`rounded-full px-2.5 py-0.5 text-[10.5px] font-bold ${statusMeta[letter.status].className}`}>
+                      <span className={`rounded-full px-2.5 py-0.5 text-[11.5px] font-bold ${statusMeta[letter.status].className}`}>
                         {statusMeta[letter.status].label}
                       </span>
-                      <span className="text-[11px] text-[var(--color-text-secondary)] tabular-nums">
+                      <span className="text-[11.5px] text-[var(--color-text-secondary)] tabular-nums">
                         {letter.replyCount} hồi đáp
                       </span>
                     </div>
@@ -813,16 +1240,21 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
           {/* Desktop list (>=768px): unified Image 3 white rounded paper card */}
           <section className="my-auto hidden max-h-[58vh] w-full flex-col overflow-hidden rounded-[28px] bg-white/95 shadow-[0_18px_48px_rgba(31,92,67,0.16)] backdrop-blur-sm md:flex">
             <div className="flex items-center justify-between border-b border-[var(--color-border)]/80 px-7 py-4">
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--color-secondary)]">
+              <p className="text-[11.5px] font-bold uppercase tracking-[0.12em] text-[var(--color-secondary)]">
                 Thư của tôi ({myLetters.length})
               </p>
-              <span className="text-[11.5px] text-[var(--color-text-secondary)]">
+              <span className="text-[12px] text-[var(--color-text-secondary)]">
                 Biệt danh: Mầm lá nhỏ
               </span>
             </div>
 
             <div className="flex-1 divide-y divide-[var(--color-border)]/80 overflow-y-auto px-7">
-              {myLetters.length === 0 ? (
+              {isLoadingLetters ? (
+                <div className="py-5 space-y-3" aria-label="Đang tải danh sách thư">
+                  <div className="skeleton-warm animate-pulse h-20 w-full rounded-2xl bg-[#F4EFE4]" />
+                  <div className="skeleton-warm animate-pulse h-20 w-full rounded-2xl bg-[#F4EFE4]" />
+                </div>
+              ) : myLetters.length === 0 ? (
                 <div className="py-12 text-center">
                   <span className="material-symbols-outlined text-[34px] text-[var(--color-secondary)]">
                     mail_outline
@@ -853,15 +1285,15 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           {letter.status && (
-                            <span className={`rounded-full px-2.5 py-0.5 text-[10.5px] font-bold ${statusMeta[letter.status].className}`}>
+                            <span className={`rounded-full px-2.5 py-0.5 text-[11.5px] font-bold ${statusMeta[letter.status].className}`}>
                               {statusMeta[letter.status].label}
                             </span>
                           )}
-                          <span className="inline-flex items-center gap-1 rounded-full bg-[#F5F7F3] px-2.5 py-0.5 text-[10.5px] font-semibold text-[var(--color-text-secondary)]">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[#F5F7F3] px-2.5 py-0.5 text-[11.5px] font-semibold text-[var(--color-text-secondary)]">
                             {letter.topic}
                           </span>
                         </div>
-                        <span className="text-[11.5px] text-[var(--color-text-secondary)] tabular-nums">
+                        <span className="text-[12px] text-[var(--color-text-secondary)] tabular-nums">
                           {letter.time} · {letter.replyCount} hồi đáp
                         </span>
                       </div>
@@ -951,7 +1383,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
                   <p className="line-clamp-3 text-[13px] leading-6 text-[var(--color-text-primary)]">
                     {reply.content}
                   </p>
-                  <div className="mt-3 flex items-center justify-between text-[10px] text-[var(--color-text-secondary)]">
+                  <div className="mt-3 flex items-center justify-between text-[11.5px] text-[var(--color-text-secondary)]">
                     <span>{reply.time}</span>
                   </div>
                 </article>
@@ -962,10 +1394,10 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
           {/* Desktop unified white paper card matching Image 3 */}
           <section className="my-auto hidden max-h-[58vh] w-full flex-col overflow-hidden rounded-[28px] bg-white/95 shadow-[0_18px_48px_rgba(31,92,67,0.16)] backdrop-blur-sm md:flex">
             <div className="flex items-center justify-between border-b border-[var(--color-border)]/80 px-7 py-4">
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--color-secondary)]">
+              <p className="text-[11.5px] font-bold uppercase tracking-[0.12em] text-[var(--color-secondary)]">
                 Phản hồi đã lưu ({archivedReplies.length})
               </p>
-              <span className="text-[11.5px] text-[var(--color-text-secondary)]">
+              <span className="text-[12px] text-[var(--color-text-secondary)]">
                 Những lời động viên bạn giữ lại
               </span>
             </div>
@@ -990,10 +1422,10 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
                     type="button"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-[var(--color-secondary)]">
+                      <span className="text-[11.5px] font-bold uppercase tracking-[0.1em] text-[var(--color-secondary)]">
                         {reply.alias}
                       </span>
-                      <span className="text-[11.5px] text-[var(--color-text-secondary)]">{reply.time}</span>
+                      <span className="text-[12px] text-[var(--color-text-secondary)]">{reply.time}</span>
                     </div>
                     <p className="mt-2 text-[14.5px] leading-7 text-[var(--color-text-primary)]">
                       {reply.content}
@@ -1048,7 +1480,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
                 >
                   <span className="material-symbols-outlined text-[20px]">close</span>
                 </button>
-                <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[var(--color-secondary)]">
+                <p className="text-[11.5px] font-bold uppercase tracking-[0.12em] text-[var(--color-secondary)]">
                   Tâm sự của bạn
                 </p>
                 <p className="mt-3 whitespace-pre-line text-[14px] leading-7 text-[var(--color-text-primary)]">
@@ -1077,13 +1509,29 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
           </div>
           <section className="my-auto max-h-[58vh] overflow-y-auto rounded-[28px] bg-white/95 p-5 md:p-7 shadow-[0_18px_48px_rgba(31,92,67,0.16)] backdrop-blur-sm">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--color-secondary)]">Phản hồi</p>
-              <p className="mt-3 text-[14px] md:text-[15px] leading-7 text-[var(--color-text-primary)]">{activeReply.content}</p>
-              <p className="mt-3 text-[10px] md:text-[11px] text-[var(--color-text-secondary)]">{activeReply.time}</p>
+              <p className="text-[11.5px] font-bold uppercase tracking-[0.12em] text-[var(--color-secondary)]">Phản hồi</p>
+              <div className="mt-3">
+                {activeReply.contentWarning ? (
+                  <ContentWarningBox
+                    warningText={activeReply.contentWarning}
+                    isRevealed={revealedCwIds.includes(activeReply.id)}
+                    onReveal={() => revealContentWarning(activeReply.id)}
+                  >
+                    <p className="text-[14px] md:text-[15px] leading-7 text-[var(--color-text-primary)]">
+                      {activeReply.content}
+                    </p>
+                  </ContentWarningBox>
+                ) : (
+                  <p className="text-[14px] md:text-[15px] leading-7 text-[var(--color-text-primary)]">
+                    {activeReply.content}
+                  </p>
+                )}
+              </div>
+              <p className="mt-3 text-[11.5px] md:text-[12px] text-[var(--color-text-secondary)]">{activeReply.time}</p>
             </div>
             <div className="my-5 h-px w-full bg-[var(--color-border)]" />
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">Tâm sự của bạn</p>
+              <p className="text-[11.5px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">Tâm sự của bạn</p>
               <p className="mt-3 whitespace-pre-line text-[12.5px] md:text-[13.5px] leading-6 text-[var(--color-text-secondary)]">
                 {originalPost?.content}
               </p>
@@ -1150,17 +1598,29 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
           </div>
           <article className="my-auto max-h-[58vh] overflow-y-auto rounded-[28px] bg-white/95 p-5 shadow-[0_18px_48px_rgba(31,92,67,0.16)] backdrop-blur-sm md:p-7">
             <div className="mb-3 hidden items-center justify-between border-b border-[var(--color-border)]/70 pb-3 md:flex">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E7F1DF] px-3 py-1 text-[11px] font-bold text-[var(--color-primary)]">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E7F1DF] px-3 py-1 text-[11.5px] font-bold text-[var(--color-primary)]">
                 <span className="material-symbols-outlined text-[14px]">menu_book</span>
                 {activePaperLetter.topic}
               </span>
-              <span className="text-[11.5px] text-[var(--color-text-secondary)]">
+              <span className="text-[12px] text-[var(--color-text-secondary)]">
                 {activePaperLetter.alias} · {activePaperLetter.time}
               </span>
             </div>
-            <p className="whitespace-pre-line text-[14px] leading-7 text-[var(--color-text-primary)] md:text-[15px] md:leading-8">
-              {activePaperLetter.content}
-            </p>
+            {activePaperLetter.contentWarning ? (
+              <ContentWarningBox
+                warningText={activePaperLetter.contentWarning}
+                isRevealed={revealedCwIds.includes(activePaperLetter.id)}
+                onReveal={() => revealContentWarning(activePaperLetter.id)}
+              >
+                <p className="whitespace-pre-line text-[14px] leading-7 text-[var(--color-text-primary)] md:text-[15px] md:leading-8">
+                  {activePaperLetter.content}
+                </p>
+              </ContentWarningBox>
+            ) : (
+              <p className="whitespace-pre-line text-[14px] leading-7 text-[var(--color-text-primary)] md:text-[15px] md:leading-8">
+                {activePaperLetter.content}
+              </p>
+            )}
           </article>
 
           <div className="relative z-20 -mx-4 -mb-5 mt-auto rounded-t-[28px] border-t border-[#E7E8DE] bg-[#FFF8EF] px-5 pt-4 pb-6 shadow-[0_-12px_32px_rgba(31,92,67,0.12)] md:mx-0 md:mb-0 md:rounded-[26px] md:border md:bg-[#FFF8EF]/95 md:p-3.5 md:shadow-[0_10px_28px_rgba(31,92,67,0.10)] md:backdrop-blur-md">
@@ -1211,7 +1671,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
           >
             <span className="material-symbols-outlined text-[22px]">inventory_2</span>
             {archivedReplies.length > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-secondary)] px-1.5 text-[9px] font-bold text-white shadow ring-2 ring-white">
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-secondary)] px-1.5 text-[11.5px] font-bold text-white shadow ring-2 ring-white">
                 {archivedReplies.length}
               </span>
             )}
@@ -1219,49 +1679,84 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
         </div>
 
         {/* Bong bóng thoại của Mochi */}
-        <div className="relative z-20 mt-4 flex justify-center md:mt-3 lg:mt-5">
-          <div className="mochi-bubble-bounce relative flex items-center gap-2 rounded-full border border-emerald-950/10 bg-white/95 px-4 py-2 text-center shadow-[0_6px_20px_rgba(0,0,0,0.08)] backdrop-blur-md md:px-5 md:py-2.5">
-            <span className="material-symbols-outlined text-[19px] text-[#1F5C43]">
-              {hasPendingReply ? 'mark_email_unread' : 'mail'}
-            </span>
-            <span className="text-[13.5px] font-bold text-[#1F5C43] md:text-[14.5px]">
-              {hasPendingReply ? (
-                'Có ai đó đã trả lời bạn'
-              ) : pendingPaperLetters.length > 0 ? (
-                <>
-                  <span className="md:hidden">Có ai đó đã gửi thư cho bạn</span>
-                  <span className="hidden md:inline">Một lá thư đang chờ bạn</span>
-                </>
-              ) : (
-                'Hòm thư đang yên tĩnh'
-              )}
-            </span>
-            {/* Đuôi nhọn của bóng thoại chỉ xuống Mochi */}
+        <div className="relative z-20 mt-4 flex flex-col items-center gap-2 md:mt-3 lg:mt-5">
+          {isLoadingLetters ? (
             <div
-              className="absolute -bottom-[7px] left-1/2 -translate-x-1/2 h-0 w-0 border-x-[7px] border-x-transparent border-t-[8px] border-t-white/95"
-              aria-hidden="true"
+              className="skeleton-warm animate-pulse h-11 w-64 rounded-full bg-[#F3ECE0] border border-[#E7DCC9] shadow-sm"
+              aria-label="Đang đồng bộ hòm thư cộng đồng"
             />
-            {(hasPendingReply || pendingPaperLetters.length > 0) && (
-              <svg
-                className="pointer-events-none absolute -right-7 -top-4 hidden h-6 w-6 md:block"
-                viewBox="0 0 28 28"
-                fill="none"
+          ) : (
+            <div className="mochi-bubble-bounce relative flex items-center gap-2 rounded-full border border-emerald-950/10 bg-white/95 px-4 py-2 text-center shadow-[0_6px_20px_rgba(0,0,0,0.08)] backdrop-blur-md md:px-5 md:py-2.5">
+              <span className="material-symbols-outlined text-[19px] text-[#1F5C43]">
+                {hasPendingReply ? 'mark_email_unread' : 'mail'}
+              </span>
+              <span className="text-[13.5px] font-bold text-[#1F5C43] md:text-[14.5px]">
+                {hasPendingReply ? (
+                  'Có ai đó đã trả lời bạn'
+                ) : pendingPaperLetters.length > 0 ? (
+                  <>
+                    <span className="md:hidden">Có ai đó đã gửi thư cho bạn</span>
+                    <span className="hidden md:inline">Một lá thư đang chờ bạn</span>
+                  </>
+                ) : (
+                  'Hòm thư đang yên tĩnh'
+                )}
+              </span>
+              {/* Đuôi nhọn của bóng thoại chỉ xuống Mochi */}
+              <div
+                className="absolute -bottom-[7px] left-1/2 -translate-x-1/2 h-0 w-0 border-x-[7px] border-x-transparent border-t-[8px] border-t-white/95"
                 aria-hidden="true"
-              >
-                <path d="M5 12L9 3M13 15L21 8M16 21L25 19" stroke="#F4D37B" strokeWidth="3" strokeLinecap="round" />
-              </svg>
-            )}
-          </div>
+              />
+              {(hasPendingReply || pendingPaperLetters.length > 0) && (
+                <svg
+                  className="pointer-events-none absolute -right-7 -top-4 hidden h-6 w-6 md:block"
+                  viewBox="0 0 28 28"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12L9 3M13 15L21 8M16 21L25 19" stroke="#F4D37B" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+              )}
+            </div>
+          )}
+
+          {shieldSensitive && !isLoadingLetters && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#E7F1DF]/92 border border-[#C5DEC0] px-3 py-1 text-[11.5px] font-semibold text-[#1F5C43] shadow-2xs backdrop-blur-sm">
+              <span className="material-symbols-outlined text-[14px]">shield_with_heart</span>
+              <span>Chế độ bảo vệ an toàn: Đã lọc thư nhạy cảm giúp bạn</span>
+            </span>
+          )}
         </div>
 
-        {/* Khoảng trống giữa để lộ Mochi và phần trên của chồng thư pastel */}
-        <div className="flex-1 min-h-[140px] md:min-h-[210px]" aria-hidden="true" />
+        {/* Lọc chủ đề được lưu cục bộ và có thể hoàn tác */}
+        <div className="flex-1 min-h-[140px] md:min-h-[210px] flex flex-col items-center justify-end gap-2 pb-4">
+          {blockedCommunityTopics.map((topic) => (
+            <div
+              key={topic}
+              className="flex max-w-full items-center gap-2 rounded-full border border-[var(--color-border)] bg-white/90 px-3 py-1.5 text-[11px] text-[var(--color-text-secondary)] shadow-sm"
+            >
+              <span>Đang ẩn thư: {topic}</span>
+              <button
+                onClick={() => setCommunityTopicBlocked(topic, false)}
+                className="font-bold text-[var(--color-primary)] underline"
+                type="button"
+              >
+                Bỏ lọc
+              </button>
+            </div>
+          ))}
+        </div>
 
         {/* Khay hành động riêng */}
         <div className="relative z-20 -mx-4 -mb-5 rounded-t-[30px] border-t border-[#E7E8DE] bg-[#FFF8EF] px-5 pt-4 pb-6 shadow-[0_-14px_36px_rgba(31,92,67,0.14)] md:mx-auto md:mb-0 md:w-full md:max-w-[440px] md:rounded-[28px] md:border md:border-[#EFE4D5] md:bg-[#FAF8F3]/96 md:px-7 md:py-5 md:shadow-[0_14px_36px_rgba(31,92,67,0.14)]">
           <div className="flex flex-col gap-3">
             {/* Nút chính "Nhận một lá thư" / "Mở phản hồi" */}
-            {(hasPendingReply || pendingPaperLetters.length > 0) && (
+            {isLoadingLetters ? (
+              <div
+                className="skeleton-warm animate-pulse h-[54px] md:h-[50px] w-full rounded-full bg-[#EDE4D3]"
+                aria-hidden="true"
+              />
+            ) : (hasPendingReply || pendingPaperLetters.length > 0) ? (
               <div className="relative flex items-center justify-center">
                 <svg
                   className="pointer-events-none absolute -left-8 hidden h-7 w-7 md:block"
@@ -1299,7 +1794,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
                   <path d="M6 6L16 10M7 14L19 14M6 22L16 18" stroke="#F4D37B" strokeWidth="3" strokeLinecap="round" />
                 </svg>
               </div>
-            )}
+            ) : null}
 
             {/* Nút phụ "Viết tâm sự" */}
             <button
@@ -1335,7 +1830,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
           setHistory([]);
           setRoute('feed');
         }}
-        className="absolute right-4 top-4 min-h-11 rounded-full px-4 text-[10px] font-bold text-[var(--color-text-secondary)] hover:bg-white/60"
+        className="absolute right-4 top-4 min-h-11 rounded-full px-4 text-[12px] font-bold text-[var(--color-text-secondary)] hover:bg-white/60"
         type="button"
       >
         Bỏ qua
@@ -1343,8 +1838,8 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
       <div className={`mail-transition ${animationStage === 'opening' ? 'is-opening' : 'is-closing'}`}>
         <div className="mail-paper">
           <span className="material-symbols-outlined text-[20px] text-[#B8754F]">eco</span>
-          <p className="mt-2 text-[12px] font-bold text-[var(--color-text-secondary)]">{selectedLetter.alias}</p>
-          <p className="mt-1 line-clamp-3 text-[10px] leading-4 text-[#756B60]">
+          <p className="mt-2 text-[12.5px] font-bold text-[var(--color-text-secondary)]">{selectedLetter.alias}</p>
+          <p className="mt-1 line-clamp-3 text-[11.5px] leading-5 text-[#756B60]">
             {selectedLetter.content}
           </p>
         </div>
@@ -1358,7 +1853,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
           </div>
         </div>
       </div>
-      <p className="absolute bottom-[18%] text-[11px] font-medium text-[#7A7065]">
+      <p className="absolute bottom-[18%] text-[12px] font-medium text-[#7A7065]">
         {animationStage === 'opening' ? 'Đang mở lá thư...' : 'Đang gấp lá thư lại...'}
       </p>
     </main>
@@ -1390,16 +1885,30 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[20px] text-[#B8754F]">nest_eco_leaf</span>
               <div>
-                <p className="text-[11.5px] font-bold text-[#4A5A4D]">{selectedLetter.alias}</p>
-                <p className="text-[8.5px] text-[#8A8177]">{selectedLetter.time}</p>
+                <p className="text-[13px] font-bold text-[#4A5A4D]">{selectedLetter.alias}</p>
+                <p className="text-[11.5px] text-[#8A8177]">{selectedLetter.time}</p>
               </div>
             </div>
-            <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[#E7F1DF] px-2.5 py-1 text-[9.5px] font-bold text-[var(--color-primary)]">
-              <span className="material-symbols-outlined text-[13px]">menu_book</span>
+            <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[#E7F1DF] px-2.5 py-1 text-[11.5px] font-bold text-[var(--color-primary)]">
+              <span className="material-symbols-outlined text-[14px]">menu_book</span>
               {selectedLetter.topic}
             </span>
-            <div className="mt-5 whitespace-pre-line text-[13px] leading-[1.8] text-[var(--color-text-primary)]">
-              {selectedLetter.content}
+            <div className="mt-5">
+              {selectedLetter.contentWarning && !selectedLetter.isOwn ? (
+                <ContentWarningBox
+                  warningText={selectedLetter.contentWarning}
+                  isRevealed={revealedCwIds.includes(selectedLetter.id)}
+                  onReveal={() => revealContentWarning(selectedLetter.id)}
+                >
+                  <div className="whitespace-pre-line text-[13px] leading-[1.8] text-[var(--color-text-primary)]">
+                    {selectedLetter.content}
+                  </div>
+                </ContentWarningBox>
+              ) : (
+                <div className="whitespace-pre-line text-[13px] leading-[1.8] text-[var(--color-text-primary)]">
+                  {selectedLetter.content}
+                </div>
+              )}
             </div>
             <span className="material-symbols-outlined filled absolute bottom-5 right-5 rotate-12 text-[26px] text-[#E9977D]">
               favorite
@@ -1423,17 +1932,37 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
                   <div className="mt-3 space-y-3">
                     {replies.map((reply) => (
                       <div key={reply.id} className="rounded-2xl bg-[var(--color-chart-background)] p-3">
-                        <p className="text-[9.5px] font-bold text-[var(--color-primary)]">{reply.alias}</p>
-                        <p className="mt-1 text-[10.5px] leading-5 text-[var(--color-text-secondary)]">{reply.content}</p>
+                        <p className="text-[11.5px] font-bold text-[var(--color-primary)]">{reply.alias}</p>
+                        <div className="mt-1">
+                          {reply.contentWarning ? (
+                            <ContentWarningBox
+                              warningText={reply.contentWarning}
+                              isRevealed={revealedCwIds.includes(reply.id)}
+                              onReveal={() => revealContentWarning(reply.id)}
+                            >
+                              <p className="text-[12.5px] leading-5 text-[var(--color-text-secondary)]">
+                                {reply.content}
+                              </p>
+                            </ContentWarningBox>
+                          ) : (
+                            <p className="text-[12.5px] leading-5 text-[var(--color-text-secondary)]">
+                              {reply.content}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
                 </>
               ) : (
                 <div className="flex items-start gap-2">
-                  <span className="material-symbols-outlined text-[18px] text-[#A17643]">hourglass_top</span>
-                  <p className="text-[10.5px] leading-5 text-[#6D655C]">
-                    Lá thư đang chờ kiểm duyệt nên chưa được đưa vào hòm thư chung và chưa thể nhận hồi đáp.
+                  <span className="material-symbols-outlined text-[18px] text-[#A17643]">
+                    {selectedLetter.status === 'hidden' ? 'lock' : 'hourglass_top'}
+                  </span>
+                  <p className="text-[12px] leading-5 text-[#6D655C]">
+                    {selectedLetter.status === 'hidden'
+                      ? 'Lá thư được giữ ở chế độ riêng tư chỉ mình bạn thấy để bảo vệ sự an toàn cảm xúc của bạn.'
+                      : 'Lá thư đang chờ kiểm duyệt nên chưa được đưa vào hòm thư chung và chưa thể nhận hồi đáp.'}
                   </p>
                 </div>
               )}
@@ -1442,7 +1971,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
             <div className="mt-4 grid grid-cols-2 gap-3">
               <button
                 onClick={() => showToast('Đã gửi một lời đồng cảm nhẹ nhàng.')}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#D7B58D] bg-[#FFF9F0] text-[11px] font-bold text-[#8A6746]"
+                className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#D7B58D] bg-[#FFF9F0] text-[12.5px] font-bold text-[#8A6746]"
                 type="button"
               >
                 <span className="material-symbols-outlined text-[19px]">favorite</span>
@@ -1454,7 +1983,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
                   go('reply-compose');
                 }}
                 disabled={!selectedLetter.repliesAllowed}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-[var(--color-highlight)] text-[11px] font-bold text-[var(--color-primary)] disabled:bg-[var(--color-border)] disabled:text-[var(--color-text-secondary)]"
+                className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-[var(--color-highlight)] text-[12.5px] font-bold text-[var(--color-primary)] disabled:bg-[var(--color-border)] disabled:text-[var(--color-text-secondary)]"
                 type="button"
               >
                 <span className="material-symbols-outlined text-[19px]">reply</span>
@@ -1462,7 +1991,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
               </button>
             </div>
           )}
-          <p className="mt-3 text-center text-[9px] leading-4 text-[var(--color-text-secondary)]">
+          <p className="mt-3 text-center text-[11.5px] leading-5 text-[var(--color-text-secondary)]">
             Bạn có thể chỉ đọc và lắng nghe. Không bắt buộc phải hồi đáp.
           </p>
         </main>
@@ -1494,26 +2023,40 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
             <section className="my-auto max-h-[58vh] overflow-y-auto rounded-[28px] bg-white/95 p-7 shadow-[0_18px_48px_rgba(31,92,67,0.16)] backdrop-blur-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--color-secondary)]">
+                  <span className="text-[11.5px] font-bold uppercase tracking-[0.12em] text-[var(--color-secondary)]">
                     {selectedLetter.isOwn ? 'Tâm sự của bạn' : 'Lá thư ẩn danh'}
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#E7F1DF] px-2.5 py-0.5 text-[10.5px] font-bold text-[var(--color-primary)]">
-                    <span className="material-symbols-outlined text-[13px]">menu_book</span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#E7F1DF] px-2.5 py-0.5 text-[11.5px] font-bold text-[var(--color-primary)]">
+                    <span className="material-symbols-outlined text-[14px]">menu_book</span>
                     {selectedLetter.topic}
                   </span>
                   {selectedLetter.isOwn && selectedLetter.status && (
-                    <span className={`rounded-full px-2.5 py-0.5 text-[10.5px] font-bold ${statusMeta[selectedLetter.status].className}`}>
+                    <span className={`rounded-full px-2.5 py-0.5 text-[11.5px] font-bold ${statusMeta[selectedLetter.status].className}`}>
                       {statusMeta[selectedLetter.status].label}
                     </span>
                   )}
                 </div>
-                <span className="text-[11.5px] text-[var(--color-text-secondary)]">
+                <span className="text-[12px] text-[var(--color-text-secondary)]">
                   {selectedLetter.alias} · {selectedLetter.time}
                 </span>
               </div>
 
-              <div className="mt-4 whitespace-pre-line text-[15px] leading-7 text-[var(--color-text-primary)]">
-                {selectedLetter.content}
+              <div className="mt-4">
+                {selectedLetter.contentWarning && !selectedLetter.isOwn ? (
+                  <ContentWarningBox
+                    warningText={selectedLetter.contentWarning}
+                    isRevealed={revealedCwIds.includes(selectedLetter.id)}
+                    onReveal={() => revealContentWarning(selectedLetter.id)}
+                  >
+                    <div className="whitespace-pre-line text-[15px] leading-7 text-[var(--color-text-primary)]">
+                      {selectedLetter.content}
+                    </div>
+                  </ContentWarningBox>
+                ) : (
+                  <div className="whitespace-pre-line text-[15px] leading-7 text-[var(--color-text-primary)]">
+                    {selectedLetter.content}
+                  </div>
+                )}
               </div>
 
               <div className="my-5 h-px w-full bg-[var(--color-border)]" />
@@ -1521,28 +2064,46 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
               {selectedLetter.isOwn ? (
                 selectedLetter.status === 'published' ? (
                   <div>
-                    <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
+                    <p className="text-[11.5px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
                       {replies.length} lời hồi đáp riêng
                     </p>
                     <div className="mt-3 space-y-2.5">
                       {replies.map((reply) => (
                         <div key={reply.id} className="rounded-2xl bg-[#FFF8EF] px-4 py-3">
                           <div className="flex items-center justify-between">
-                            <p className="text-[11px] font-bold text-[var(--color-primary)]">{reply.alias}</p>
-                            <span className="text-[10.5px] text-[var(--color-text-secondary)]">{reply.time}</span>
+                            <p className="text-[12px] font-bold text-[var(--color-primary)]">{reply.alias}</p>
+                            <span className="text-[11.5px] text-[var(--color-text-secondary)]">{reply.time}</span>
                           </div>
-                          <p className="mt-1 text-[13px] leading-6 text-[var(--color-text-primary)]">
-                            {reply.content}
-                          </p>
+                          <div className="mt-1">
+                            {reply.contentWarning ? (
+                              <ContentWarningBox
+                                warningText={reply.contentWarning}
+                                isRevealed={revealedCwIds.includes(reply.id)}
+                                onReveal={() => revealContentWarning(reply.id)}
+                              >
+                                <p className="text-[13px] leading-6 text-[var(--color-text-primary)]">
+                                  {reply.content}
+                                </p>
+                              </ContentWarningBox>
+                            ) : (
+                              <p className="text-[13px] leading-6 text-[var(--color-text-primary)]">
+                                {reply.content}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-start gap-2.5 rounded-2xl bg-[#FFF8EB] px-4 py-3 text-[#8A693C]">
-                    <span className="material-symbols-outlined mt-0.5 text-[18px]">hourglass_top</span>
+                    <span className="material-symbols-outlined mt-0.5 text-[18px]">
+                      {selectedLetter.status === 'hidden' ? 'lock' : 'hourglass_top'}
+                    </span>
                     <p className="text-[12.5px] leading-5">
-                      Lá thư đang chờ kiểm duyệt nên chưa được đưa vào hòm thư chung và chưa thể nhận hồi đáp.
+                      {selectedLetter.status === 'hidden'
+                        ? 'Lá thư được giữ ở chế độ riêng tư chỉ mình bạn thấy để bảo vệ sự an toàn cảm xúc của bạn.'
+                        : 'Lá thư đang chờ kiểm duyệt nên chưa được đưa vào hòm thư chung và chưa thể nhận hồi đáp.'}
                     </p>
                   </div>
                 )
@@ -1661,7 +2222,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
             className="min-h-[320px] w-full resize-none bg-transparent text-[14px] leading-7 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-secondary)]/55"
             autoFocus
           />
-          <p className="mt-2 text-right text-[11px] text-[var(--color-text-secondary)] tabular-nums">{replyText.length} / 500</p>
+          <p className="mt-2 text-right text-[11.5px] text-[var(--color-text-secondary)] tabular-nums">{replyText.length} / 500</p>
         </section>
 
         <button
@@ -1693,10 +2254,10 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
 
             <section className="my-auto w-full rounded-[28px] bg-white/95 p-7 shadow-[0_18px_48px_rgba(31,92,67,0.16)] backdrop-blur-sm">
               <div className="flex items-center justify-between border-b border-[var(--color-border)]/70 pb-3">
-                <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[var(--color-secondary)]">
+                <p className="text-[11.5px] font-bold uppercase tracking-[0.12em] text-[var(--color-secondary)]">
                   Hồi đáp ẩn danh đến {selectedLetter.alias}
                 </p>
-                <span className="text-[11px] font-semibold text-[var(--color-text-secondary)] tabular-nums">
+                <span className="text-[11.5px] font-semibold text-[var(--color-text-secondary)] tabular-nums">
                   {replyText.length} / 500
                 </span>
               </div>
@@ -1743,19 +2304,15 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
       <main className="flex min-h-[calc(100vh-33px)] flex-col items-center justify-center px-5 text-center md:hidden">
         <div className="relative">
           <div className="absolute inset-5 rounded-full bg-[var(--color-highlight)]/70 blur-xl" />
-          <img
-            src="/assets/MindCare_2D_Assets/characters/mochi_happy.png"
-            alt="Mochi ôm một lời hồi đáp"
-            className="relative h-40 w-40 object-contain [image-rendering:pixelated]"
-          />
-          <span className="material-symbols-outlined filled absolute right-2 top-5 text-[28px] text-[#E9977D]">
+          <MochiHappyCompanion className="relative h-36 w-36" />
+          <span className="material-symbols-outlined filled absolute right-1 top-3 text-[28px] text-[#E9977D]">
             favorite
           </span>
         </div>
         <h1 className="mt-5 text-[21px] font-bold leading-8 text-[var(--color-primary)]">
           Cảm ơn bạn đã dành thời gian lắng nghe
         </h1>
-        <p className="mt-2 max-w-[290px] text-[11px] leading-5 text-[var(--color-text-secondary)]">
+        <p className="mt-2 max-w-[300px] text-[12.5px] leading-5 text-[var(--color-text-secondary)]">
           Lời hồi đáp đã được gửi riêng đến người viết thư và không hiển thị công khai.
         </p>
         <button
@@ -1779,11 +2336,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
             <section className="my-auto rounded-[28px] bg-white/95 p-8 text-center shadow-[0_18px_48px_rgba(31,92,67,0.16)] backdrop-blur-sm">
               <div className="relative mx-auto w-fit">
                 <div className="absolute inset-4 rounded-full bg-[var(--color-highlight)]/70 blur-xl" />
-                <img
-                  src="/assets/MindCare_2D_Assets/characters/mochi_happy.png"
-                  alt="Mochi ôm một lời hồi đáp"
-                  className="relative h-32 w-32 object-contain [image-rendering:pixelated]"
-                />
+                <MochiHappyCompanion className="relative h-32 w-32" />
                 <span className="material-symbols-outlined filled absolute right-1 top-3 text-[24px] text-[#E9977D]">
                   favorite
                 </span>
@@ -1821,7 +2374,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
 
   const renderLetterComposer = () => (
     <>
-      {/* Mobile (<768px): preserved unchanged */}
+      {/* Mobile (<768px): with Topic Chips & allowReplies Toggle */}
       <main className="relative -mx-4 flex min-h-[calc(100vh-33px)] flex-col overflow-hidden bg-[#FAF7EE] px-4 pb-5 pt-3 md:hidden">
         <img
           src={MOCHI_MAILBOX_GIF}
@@ -1838,21 +2391,86 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
           <span className="material-symbols-outlined text-[24px]">arrow_back</span>
         </button>
 
-        <section className="paper-mail-content relative z-10 my-auto rounded-[28px] bg-white/95 p-5 shadow-[0_18px_48px_rgba(31,92,67,0.18)] backdrop-blur-sm">
+        <section className="paper-mail-content relative z-10 my-auto rounded-[28px] bg-white/95 p-5 shadow-[0_18px_48px_rgba(31,92,67,0.18)] backdrop-blur-sm space-y-3.5">
+          {/* Topic Chip Strip */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[12px] font-bold text-[#1F5C43]">Chọn chủ đề tâm sự</span>
+              <span className="text-[11.5px] font-medium text-[var(--color-text-secondary)]">
+                Ẩn danh 100%
+              </span>
+            </div>
+            <div
+              role="radiogroup"
+              aria-label="Chọn chủ đề lá thư"
+              className="flex flex-wrap gap-1.5"
+            >
+              {LETTER_TOPICS.map((topic) => {
+                const isSelected = postTopic === topic;
+                return (
+                  <button
+                    key={topic}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    onClick={() => setPostTopic(topic)}
+                    className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition-all active:scale-95 cursor-pointer ${
+                      isSelected
+                        ? 'bg-[#1F5C43] text-white shadow-2xs'
+                        : 'border border-[#DCE6D6] bg-[#FAF7EE] text-[#4E5E52] hover:bg-[#E7F1DF]'
+                    }`}
+                  >
+                    {topic}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="h-px bg-[var(--color-border)]/70" />
+
           <textarea
             value={postText}
             onChange={(event) => setPostText(event.target.value.slice(0, 1000))}
             placeholder="Viết tâm sự của bạn..."
-            className="min-h-[360px] w-full resize-none bg-transparent text-[14px] leading-7 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-secondary)]/55"
+            className="min-h-[240px] w-full resize-none bg-transparent text-[14px] leading-7 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-secondary)]/55"
             autoFocus
           />
-          <p className="mt-2 text-right text-[11px] text-[var(--color-text-secondary)] tabular-nums">{postText.length} / 1000</p>
+
+          <div className="flex items-center justify-between gap-3 pt-2 border-t border-[var(--color-border)]/70">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={allowReplies}
+              onClick={() => setAllowReplies((prev) => !prev)}
+              className="inline-flex items-center gap-2 text-left cursor-pointer"
+            >
+              <span
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors ${
+                  allowReplies ? 'bg-[#1F5C43]' : 'bg-[#D3DAD2]'
+                }`}
+              >
+                <span
+                  className={`h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                    allowReplies ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </span>
+              <span className="text-[12px] font-semibold text-[#285C3D]">
+                Cho phép nhận hồi đáp
+              </span>
+            </button>
+
+            <p className="text-right text-[11.5px] text-[var(--color-text-secondary)] tabular-nums shrink-0">
+              {postText.length} / 1000
+            </p>
+          </div>
         </section>
 
         <button
           onClick={publishLetter}
           disabled={!postText.trim() || isPublishing}
-          className="relative z-10 mt-auto flex min-h-[54px] w-full items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] px-6 py-3.5 text-[15px] font-bold text-white shadow-[0_8px_24px_rgba(31,92,67,0.25)] transition-all duration-200 ease-out active:scale-[0.98] disabled:opacity-45"
+          className="relative z-10 mt-4 flex min-h-[54px] w-full items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] px-6 py-3.5 text-[15px] font-bold text-white shadow-[0_8px_24px_rgba(31,92,67,0.25)] transition-all duration-200 ease-out active:scale-[0.98] disabled:opacity-45"
           type="button"
         >
           <span className="material-symbols-outlined text-[20px]">check</span>
@@ -1860,7 +2478,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
         </button>
       </main>
 
-      {/* Desktop (>=768px): Unified Image 3 Cozy Garden Frame */}
+      {/* Desktop (>=768px): Unified Cozy Garden Frame with Topic Chips & allowReplies Toggle */}
       <div className="hidden md:block">
         {renderMailboxShell(
           <div className="flex min-h-0 flex-1 flex-col md:mx-auto md:w-full md:max-w-2xl">
@@ -1876,20 +2494,74 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
               <div className="h-[46px] w-[46px]" />
             </div>
 
-            <section className="my-auto w-full rounded-[28px] bg-white/95 p-7 shadow-[0_18px_48px_rgba(31,92,67,0.16)] backdrop-blur-sm">
-              <div className="flex items-center justify-between border-b border-[var(--color-border)]/70 pb-3">
-                <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-[var(--color-secondary)]">
+            <section className="my-auto w-full rounded-[28px] bg-white/95 p-6 shadow-[0_18px_48px_rgba(31,92,67,0.16)] backdrop-blur-sm space-y-3.5">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-border)]/70 pb-3">
+                <p className="text-[11.5px] font-bold uppercase tracking-[0.12em] text-[var(--color-secondary)]">
                   Tâm sự ẩn danh gửi vào hòm thư chung
                 </p>
-                <span className="text-[11px] font-semibold text-[var(--color-text-secondary)] tabular-nums">
+                <span className="text-[12px] font-semibold text-[var(--color-text-secondary)] tabular-nums">
                   {postText.length} / 1000
                 </span>
               </div>
+
+              {/* Topic Chip Selector */}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div
+                  role="radiogroup"
+                  aria-label="Chọn chủ đề lá thư"
+                  className="flex flex-wrap items-center gap-1.5"
+                >
+                  {LETTER_TOPICS.map((topic) => {
+                    const isSelected = postTopic === topic;
+                    return (
+                      <button
+                        key={topic}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSelected}
+                        onClick={() => setPostTopic(topic)}
+                        className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-all active:scale-95 cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#1F5C43] text-white shadow-2xs'
+                            : 'border border-[#DCE6D6] bg-[#FAF7EE] text-[#4E5E52] hover:bg-[#E7F1DF]'
+                        }`}
+                      >
+                        {topic}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Allow Replies Switch */}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={allowReplies}
+                  onClick={() => setAllowReplies((prev) => !prev)}
+                  className="inline-flex items-center gap-2 rounded-full bg-[#FAF7EE] border border-[#E7E8DE] px-3 py-1.5 cursor-pointer hover:border-[#1F5C43]/40 transition-colors"
+                >
+                  <span
+                    className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors ${
+                      allowReplies ? 'bg-[#1F5C43]' : 'bg-[#D3DAD2]'
+                    }`}
+                  >
+                    <span
+                      className={`h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                        allowReplies ? 'translate-x-4' : 'translate-x-0'
+                      }`}
+                    />
+                  </span>
+                  <span className="text-[12px] font-semibold text-[#285C3D]">
+                    Cho phép nhận hồi đáp
+                  </span>
+                </button>
+              </div>
+
               <textarea
                 value={postText}
                 onChange={(event) => setPostText(event.target.value.slice(0, 1000))}
                 placeholder="Viết ra những điều bạn muốn được lắng nghe..."
-                className="mt-4 min-h-[225px] w-full resize-none bg-transparent text-[15px] leading-7 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-secondary)]/55"
+                className="min-h-[175px] w-full resize-none bg-transparent text-[15px] leading-7 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-secondary)]/55"
                 autoFocus
               />
             </section>
@@ -1929,11 +2601,14 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
           <LetterboxArtwork className="h-full w-full" />
         </div>
         <h1 className="mt-4 text-[21px] font-bold leading-8 text-[var(--color-primary)]">
-          Lá thư đang chờ duyệt
+          {lastPublishDecision === 'SENSITIVE_WITH_CW'
+            ? 'Đã thả thư kèm nhãn bảo vệ nhạy cảm'
+            : 'Lá thư đã được thả vào hòm thư chung'}
         </h1>
-        <p className="mt-2 max-w-[300px] text-[11px] leading-5 text-[var(--color-text-secondary)]">
-          Đội an toàn sẽ xem xét trước khi thư đủ điều kiện vào hòm thư chung. Chưa có người nhận
-          nào được xác nhận ở bước này.
+        <p className="mt-2 max-w-[300px] text-[12.5px] leading-5 text-[var(--color-text-secondary)]">
+          {lastPublishDecision === 'SENSITIVE_WITH_CW'
+            ? 'Mochi đã gắn một lớp cảnh báo dịu dàng (Content Warning) để người đọc chủ động bấm mở khi tâm trí họ sẵn sàng lắng nghe bạn.'
+            : 'Lá thư ẩn danh của bạn đã vượt qua bước kiểm duyệt an toàn và sẵn sàng gửi tới một người bạn đồng cảm.'}
         </p>
         <button
           onClick={() => {
@@ -1965,11 +2640,14 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
                 <LetterboxArtwork className="h-full w-full" />
               </div>
               <h2 className="mt-3 text-[21px] font-bold leading-8 text-[var(--color-primary)]">
-                Lá thư đang chờ duyệt
+                {lastPublishDecision === 'SENSITIVE_WITH_CW'
+                  ? 'Đã thả thư kèm nhãn bảo vệ nhạy cảm (CW)'
+                  : 'Lá thư đã được thả vào hòm thư chung'}
               </h2>
               <p className="mx-auto mt-2 max-w-md text-[13.5px] leading-6 text-[var(--color-text-secondary)]">
-                Đội an toàn sẽ xem xét trước khi thư đủ điều kiện vào hòm thư chung. Chưa có người nhận
-                nào được xác nhận ở bước này.
+                {lastPublishDecision === 'SENSITIVE_WITH_CW'
+                  ? 'Mochi đã gắn lớp cảnh báo nội dung nhạy cảm (Content Warning) để bảo vệ cộng đồng và giúp người đọc chủ động mở xem khi sẵn sàng.'
+                  : 'Lá thư ẩn danh của bạn đã được kiểm duyệt an toàn tức thì và sẵn sàng đến với một người lắng nghe tử tế.'}
               </p>
             </section>
 
@@ -2012,7 +2690,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
 
   const renderRecipients = () => (
     <>
-      <Header title="Gửi tâm sự riêng" onBack={back} />
+      <Header title="Soạn bản nháp riêng" onBack={back} />
       <main className="space-y-4 pb-24 pt-4 md:mx-auto md:max-w-3xl md:pb-10 md:pt-6">
         <div className="relative">
           <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] text-[var(--color-text-secondary)]">
@@ -2022,24 +2700,31 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
             value={recipientSearch}
             onChange={(event) => setRecipientSearch(event.target.value)}
             placeholder="Tìm người đã kết nối..."
-            className="min-h-11 w-full rounded-full border border-[var(--color-border)] bg-white pl-10 pr-4 text-[11px] outline-none focus:border-[var(--color-secondary)] md:text-[13px]"
+            className="min-h-11 w-full rounded-full border border-[var(--color-border)] bg-white pl-10 pr-4 text-[13px] outline-none focus:border-[var(--color-secondary)]"
           />
         </div>
-        <div className="rounded-2xl border border-[var(--color-highlight)] bg-[var(--color-chart-background)] p-3 md:p-4">
-          <p className="text-[9.5px] leading-4 text-[var(--color-text-secondary)] md:text-[12px] md:leading-5">
-            Chỉ hiển thị người đã kết nối và đồng ý nhận lời nhắn. Không hỗ trợ gửi tin ẩn danh
-            cho người lạ.
+        <div className="rounded-2xl border border-[var(--color-highlight)] bg-[var(--color-chart-background)] p-3.5 md:p-4">
+          <p className="text-[12px] leading-5 text-[var(--color-text-secondary)]">
+            Danh sách chỉ gồm người đã kết nối. Bản nháp được lưu trên thiết bị và hiện chưa thể
+            gửi cho người nhận từ ứng dụng.
           </p>
         </div>
         <section>
-          <h2 className="mb-2 text-[11px] font-bold text-[var(--color-primary)] md:text-[13px]">
-            Người đã đồng ý nhận lời nhắn
+          <h2 className="mb-2 text-[13px] font-bold text-[var(--color-primary)]">
+            Người đã kết nối
           </h2>
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-3">
             {confirmedContacts.map((contact) => (
               <button
                 key={contact.id}
-                onClick={() => setSelectedContact(contact)}
+                onClick={() => {
+                  if (blockedPrivateContactIds.includes(contact.id)) {
+                    togglePrivateContactBlock(contact);
+                    setSelectedContact(contact);
+                  } else {
+                    setSelectedContact(contact);
+                  }
+                }}
                 className={`flex min-h-[68px] w-full items-center gap-3 rounded-2xl border p-3 text-left transition ${
                   selectedContact?.id === contact.id
                     ? 'border-[var(--color-secondary)] bg-[var(--color-surface-mint)]'
@@ -2051,8 +2736,12 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
                   {contact.avatarLetter}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[12px] font-bold text-[var(--color-text-primary)] md:text-[14px]">{contact.name}</p>
-                  <p className="text-[9.5px] text-[var(--color-text-secondary)] md:text-[11.5px]">{contact.relationship} · Đã đồng ý</p>
+                  <p className="truncate text-[13.5px] font-bold text-[var(--color-text-primary)] md:text-[14px]">{contact.name}</p>
+                  <p className="text-[11.5px] text-[var(--color-text-secondary)]">
+                    {blockedPrivateContactIds.includes(contact.id)
+                      ? 'Đã chặn trên thiết bị · chạm để bỏ chặn'
+                      : `${contact.relationship} · Đã đồng ý`}
+                  </p>
                 </div>
                 <span className="material-symbols-outlined text-[20px] text-[var(--color-secondary)]">
                   {selectedContact?.id === contact.id ? 'check_circle' : 'circle'}
@@ -2063,7 +2752,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
           {confirmedContacts.length === 0 && (
             <div className="rounded-[22px] border border-dashed border-[var(--color-border)] p-6 text-center">
               <span className="material-symbols-outlined text-[28px] text-[var(--color-secondary)]">person_search</span>
-              <p className="mt-2 text-[11px] font-bold text-[var(--color-primary)]">Không tìm thấy người phù hợp</p>
+              <p className="mt-2 text-[12.5px] font-bold text-[var(--color-primary)]">Không tìm thấy người phù hợp</p>
             </div>
           )}
         </section>
@@ -2075,7 +2764,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
             go('private-compose');
           }}
           disabled={!selectedContact}
-          className="min-h-12 w-full rounded-full bg-[var(--color-primary)] text-[12px] font-bold text-white disabled:bg-[var(--color-text-secondary)] md:text-[14px]"
+          className="min-h-12 w-full rounded-full bg-[var(--color-primary)] text-[13.5px] font-bold text-white disabled:bg-[var(--color-text-secondary)] md:text-[14px]"
           type="button"
         >
           Tiếp tục
@@ -2086,160 +2775,142 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
 
   const renderPrivateComposer = () => (
     <>
-      <Header title="Viết lời nhắn" onBack={back} />
+      <Header title="Viết bản nháp riêng" onBack={back} />
       <main className="space-y-4 pb-24 pt-4 md:mx-auto md:max-w-3xl md:pb-10 md:pt-6">
-        <div className="flex items-center gap-3 rounded-2xl border border-[var(--color-highlight)] bg-[var(--color-chart-background)] p-3 md:p-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-highlight)] text-[12px] font-bold text-[var(--color-primary)]">
+        <div className="flex items-center gap-3 rounded-2xl border border-[var(--color-highlight)] bg-[var(--color-chart-background)] p-3.5 md:p-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-highlight)] text-[13px] font-bold text-[var(--color-primary)]">
             {selectedContact?.avatarLetter}
           </div>
           <div>
-            <p className="text-[9px] text-[var(--color-text-secondary)] md:text-[11px]">Gửi đến</p>
-            <p className="text-[12px] font-bold text-[var(--color-primary)] md:text-[14px]">{selectedContact?.name}</p>
+            <p className="text-[11.5px] text-[var(--color-text-secondary)]">Người nhận dự định</p>
+            <p className="text-[13.5px] font-bold text-[var(--color-primary)] md:text-[14px]">{selectedContact?.name}</p>
           </div>
         </div>
-        <div className="rounded-[20px] border border-[var(--color-border)] bg-white p-3 focus-within:border-[var(--color-secondary)] md:p-5">
+        <div className="rounded-[20px] border border-[var(--color-border)] bg-white p-3.5 focus-within:border-[var(--color-secondary)] md:p-5">
           <textarea
             value={privateText}
             onChange={(event) => setPrivateText(event.target.value.slice(0, 500))}
-            placeholder={`Viết lời nhắn cho ${selectedContact?.name || 'người bạn tin tưởng'}...`}
-            className="min-h-56 w-full resize-none text-[13px] leading-6 outline-none placeholder:text-[#A0AAA3] md:min-h-64 md:text-[14.5px] md:leading-7"
+            placeholder={`Viết bản nháp cho ${selectedContact?.name || 'người bạn tin tưởng'}...`}
+            className="min-h-56 w-full resize-none text-[14px] leading-6 outline-none placeholder:text-[#A0AAA3] md:min-h-64 md:text-[14.5px] md:leading-7"
           />
-          <p className="text-right text-[9px] text-[var(--color-text-secondary)] tabular-nums md:text-[11px]">{privateText.length} / 500</p>
+          <p className="text-right text-[11.5px] text-[var(--color-text-secondary)] tabular-nums">{privateText.length} / 500</p>
         </div>
-        <div className="rounded-2xl border border-[#F0E0C9] bg-[#FFF7E8] p-3 text-[9.5px] leading-4 text-[#796A57] md:p-4 md:text-[12px] md:leading-5">
-          Lời nhắn chỉ hiển thị cho {selectedContact?.name}. Nội dung không bao giờ được đăng lên
-          cộng đồng hoặc lấy tự động từ nhật ký riêng tư.
+        <div className="rounded-2xl border border-[#F0E0C9] bg-[#FFF7E8] p-3.5 text-[12px] leading-5 text-[#796A57] md:p-4">
+          Bản nháp chỉ lưu trên thiết bị và chưa gửi đến {selectedContact?.name}. Nội dung không
+          rời thiết bị qua luồng này và không lấy tự động từ nhật ký riêng tư.
         </div>
       </main>
       <div className="fixed bottom-0 left-1/2 z-30 grid w-full max-w-[420px] -translate-x-1/2 grid-cols-[1fr_1.6fr] gap-2 border-t border-[var(--color-border)] bg-[var(--color-background)]/95 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur md:sticky md:bottom-4 md:left-auto md:mx-auto md:max-w-3xl md:translate-x-0 md:rounded-2xl md:border md:p-3.5 md:shadow-[0_8px_28px_rgba(31,92,67,0.08)]">
-        <button onClick={back} className="min-h-12 rounded-full border border-[var(--color-border)] text-[11px] font-bold text-[var(--color-text-secondary)] md:text-[13px]" type="button">
+        <button onClick={back} className="min-h-12 rounded-full border border-[var(--color-border)] text-[12.5px] font-bold text-[var(--color-text-secondary)] md:text-[13px]" type="button">
           Hủy
         </button>
         <button
           onClick={() => setShowSendConfirm(true)}
-          disabled={!privateText.trim()}
-          className="min-h-12 rounded-full bg-[var(--color-primary)] text-[11px] font-bold text-white disabled:bg-[var(--color-text-secondary)] md:text-[13px]"
+          disabled={!privateText.trim() || !selectedContact || isSelectedContactBlocked}
+          className="min-h-12 rounded-full bg-[var(--color-primary)] text-[12.5px] font-bold text-white disabled:bg-[var(--color-text-secondary)] md:text-[13px]"
           type="button"
         >
-          Xem lại và gửi
+          Xem lại và lưu bản nháp
         </button>
       </div>
     </>
   );
 
-  const renderConversation = () => {
-    const submitConversationMsg = () => {
-      if (!conversationText.trim() || !receivingMessages) return;
-      setMessages((current) => [
-        ...current,
-        {
-          id: `message-${Date.now()}`,
-          sender: 'me',
-          text: conversationText.trim(),
-          time: new Intl.DateTimeFormat('vi-VN', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-          }).format(new Date()),
-        },
-      ]);
-      setConversationText('');
-    };
-
-    return (
-      <>
-        <Header
-          title={selectedContact?.name || 'Cuộc trò chuyện'}
-          onBack={back}
-          action={
-            <button
-              onClick={() => setShowConversationMenu(true)}
-              aria-label="Tùy chọn cuộc trò chuyện"
-              className="flex h-11 w-11 items-center justify-center rounded-full text-[var(--color-text-secondary)] hover:bg-[var(--color-chart-background)]"
-              type="button"
-            >
-              <span className="material-symbols-outlined text-[19px]">more_vert</span>
-            </button>
-          }
-        />
-        <main className="space-y-3 pb-24 pt-4 md:mx-auto md:min-h-[calc(100vh-170px)] md:max-w-3xl md:pb-8 md:pt-6">
-          <div className="mx-auto w-fit rounded-full bg-[var(--color-chart-background)] px-3 py-1.5 text-[9px] font-semibold text-[var(--color-text-secondary)] md:text-[11px]">
-            Cuộc trò chuyện riêng tư · dữ liệu minh họa
-          </div>
-          {messages.map((message) => (
-            <div key={message.id} className={`flex ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
-              <div
-                className={`relative max-w-[82%] rounded-[20px] px-3.5 py-2.5 md:max-w-[70%] md:px-4 md:py-3 ${
-                  message.sender === 'me'
-                    ? 'rounded-br-md bg-[var(--color-highlight)]'
-                    : 'rounded-bl-md border border-[var(--color-border)] bg-white'
-                }`}
-              >
-                {message.unread && (
-                  <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-[#E78A45] ring-2 ring-[var(--color-background)]" />
-                )}
-                <p className="mb-0.5 text-[8.5px] font-bold text-[var(--color-text-secondary)] md:text-[10.5px]">
-                  {message.sender === 'me' ? 'Bạn' : selectedContact?.name || 'Người nhận'}
-                </p>
-                <p className="text-[11.5px] leading-5 md:text-[14px] md:leading-6">{message.text}</p>
-                <p className="mt-1 text-right text-[8px] text-[var(--color-text-secondary)] md:text-[10px]">{message.time}</p>
-              </div>
-            </div>
-          ))}
-          {!receivingMessages && (
-            <div className="rounded-2xl bg-[#FFF8EF] p-3 text-center text-[10px] text-[#796A57] md:text-[12px]">
-              Bạn đã dừng nhận lời nhắn trong cuộc trò chuyện này.
-            </div>
-          )}
-        </main>
-        <div className="fixed bottom-0 left-1/2 z-30 flex w-full max-w-[420px] -translate-x-1/2 items-center gap-2 border-t border-[var(--color-border)] bg-[var(--color-background)]/95 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur md:sticky md:bottom-4 md:left-auto md:mx-auto md:max-w-3xl md:translate-x-0 md:rounded-2xl md:border md:p-3 md:shadow-[0_8px_28px_rgba(31,92,67,0.08)]">
-          <input
-            value={conversationText}
-            onChange={(event) => setConversationText(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                submitConversationMsg();
-              }
-            }}
-            disabled={!receivingMessages}
-            placeholder={receivingMessages ? `Nhắn cho ${selectedContact?.name || 'người nhận'}...` : 'Đã dừng nhận lời nhắn'}
-            className="min-h-11 flex-1 rounded-full border border-[var(--color-border)] bg-white px-4 text-[11px] outline-none disabled:bg-[#F1F0EB] md:text-[13px]"
-          />
+  const renderConversation = () => (
+    <>
+      <Header
+        title={`Bản nháp · ${selectedContact?.name || 'Người nhận'}`}
+        onBack={back}
+        action={
           <button
-            onClick={submitConversationMsg}
-            disabled={!conversationText.trim() || !receivingMessages}
-            aria-label="Gửi tin nhắn"
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-primary)] text-white disabled:bg-[var(--color-text-secondary)]"
+            onClick={() => setShowConversationMenu(true)}
+            aria-label="Tùy chọn cuộc trò chuyện"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-[var(--color-text-secondary)] hover:bg-[var(--color-chart-background)]"
             type="button"
           >
-            <span className="material-symbols-outlined text-[19px]">send</span>
+            <span className="material-symbols-outlined text-[19px]">more_vert</span>
           </button>
+        }
+      />
+      <main className="space-y-3 pb-24 pt-4 md:mx-auto md:min-h-[calc(100vh-170px)] md:max-w-3xl md:pb-8 md:pt-6">
+        <div className="mx-auto w-fit rounded-full bg-[var(--color-chart-background)] px-3.5 py-1.5 text-[11.5px] font-semibold text-[var(--color-text-secondary)]">
+          Bản nháp riêng tư · chỉ lưu trên thiết bị này · chưa được gửi
         </div>
-      </>
-    );
-  };
+        {messages.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-white/75 p-5 text-center text-[12px] leading-5 text-[var(--color-text-secondary)]">
+            Chưa có bản nháp riêng tư trên thiết bị cho liên hệ này.
+          </div>
+        ) : messages.map((message) => (
+          <div key={message.id} className={`flex ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
+            <div
+              className={`relative max-w-[82%] rounded-[20px] px-3.5 py-2.5 md:max-w-[70%] md:px-4 md:py-3 ${
+                message.sender === 'me'
+                  ? 'rounded-br-md bg-[var(--color-highlight)]'
+                  : 'rounded-bl-md border border-[var(--color-border)] bg-white'
+              }`}
+            >
+              <p className="mb-0.5 text-[11.5px] font-bold text-[var(--color-text-secondary)]">
+                {message.sender === 'me' ? 'Bạn' : selectedContact?.name || 'Người nhận'}
+              </p>
+              <p className="text-[13.5px] leading-5 md:text-[14px] md:leading-6">{message.text}</p>
+              <p className="mt-1 text-right text-[11.5px] text-[var(--color-text-secondary)]">{message.time}</p>
+            </div>
+          </div>
+        ))}
+        <div className="rounded-2xl bg-[#FFF8EF] p-3 text-center text-[11.5px] leading-5 text-[#796A57]">
+          Chưa có dịch vụ gửi/nhận tin riêng. Lưu ở đây chỉ tạo bản nháp trên thiết bị.
+        </div>
+      </main>
+      <div className="fixed bottom-0 left-1/2 z-30 flex w-full max-w-[420px] -translate-x-1/2 items-center gap-2 border-t border-[var(--color-border)] bg-[var(--color-background)]/95 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur md:sticky md:bottom-4 md:left-auto md:mx-auto md:max-w-3xl md:translate-x-0 md:rounded-2xl md:border md:p-3 md:shadow-[0_8px_28px_rgba(31,92,67,0.08)]">
+        <input
+          value={conversationText}
+          onChange={(event) => setConversationText(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+              event.preventDefault();
+              void submitConversationMsg();
+            }
+          }}
+           disabled={isSelectedContactBlocked || isSendingConversationMsg || !selectedContact}
+           placeholder={
+             isSelectedContactBlocked
+               ? 'Liên hệ này đang bị chặn trên thiết bị'
+               : `Viết bản nháp cho ${selectedContact?.name || 'người nhận'}...`
+           }
+          className="min-h-11 flex-1 rounded-full border border-[var(--color-border)] bg-white px-4 text-[13px] outline-none disabled:bg-[#F1F0EB]"
+        />
+        <button
+          onClick={() => void submitConversationMsg()}
+         disabled={!conversationText.trim() || isSelectedContactBlocked || isSendingConversationMsg}
+         aria-label="Lưu bản nháp"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-primary)] text-white disabled:bg-[var(--color-text-secondary)] cursor-pointer"
+          type="button"
+        >
+          <span className="material-symbols-outlined text-[19px]">save</span>
+        </button>
+      </div>
+    </>
+  );
 
   const renderMessageComplete = () => (
     <main className="flex min-h-[calc(100vh-33px)] flex-col items-center justify-center px-5 text-center md:mx-auto md:max-w-xl md:min-h-[80vh]">
-      <img
-        src="/assets/MindCare_2D_Assets/items/item_gift.png"
-        alt=""
-        className="h-36 w-36 object-contain [image-rendering:pixelated]"
-      />
-      <h1 className="mt-5 text-[21px] font-bold text-[var(--color-primary)]">Lời nhắn đã được gửi</h1>
-      <p className="mt-2 max-w-[290px] text-[11px] leading-5 text-[var(--color-text-secondary)]">
-        {selectedContact?.name || 'Người nhận'} sẽ thấy lời nhắn trong cuộc trò chuyện riêng.
+      <div className="relative flex items-center justify-center">
+        <div className="absolute inset-2 rounded-full bg-[var(--color-highlight)]/60 blur-xl" />
+        <WarmGiftEnvelopeVector className="relative h-32 w-32" />
+      </div>
+      <h1 className="mt-5 text-[21px] font-bold text-[var(--color-primary)]">Đã lưu bản nháp</h1>
+      <p className="mt-2 max-w-[300px] text-[13px] leading-5 text-[var(--color-text-secondary)]">
+        Bản nháp chỉ lưu trên thiết bị cho {selectedContact?.name || 'người nhận'}; họ chưa nhận được lời nhắn.
       </p>
       <button
         onClick={() => {
           setHistory([]);
           setRoute('conversation');
         }}
-        className="mt-7 min-h-12 w-full max-w-[290px] rounded-full bg-[var(--color-primary)] text-[12px] font-bold text-white"
+        className="mt-7 min-h-12 w-full max-w-[290px] rounded-full bg-[var(--color-primary)] text-[13.5px] font-bold text-white cursor-pointer"
         type="button"
       >
-        Về cuộc trò chuyện
+        Xem bản nháp
       </button>
     </main>
   );
@@ -2282,7 +2953,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
 
       {toast && (
         <div
-          className="fixed bottom-20 left-1/2 z-[70] w-[calc(100%-32px)] max-w-[388px] -translate-x-1/2 rounded-2xl bg-[var(--color-text-primary)] px-4 py-3 text-center text-[10.5px] font-semibold text-white shadow-xl"
+          className="fixed bottom-20 left-1/2 z-[70] w-[calc(100%-32px)] max-w-[388px] -translate-x-1/2 rounded-2xl bg-[var(--color-text-primary)] px-4 py-3 text-center text-[12px] font-semibold text-white shadow-xl"
           role="status"
         >
           {toast}
@@ -2292,15 +2963,20 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
       {showMailboxInfo && (
         <>
           <button onClick={() => setShowMailboxInfo(false)} aria-label="Đóng thông tin" className="fixed inset-0 z-50 bg-[var(--color-text-primary)]/20" type="button" />
-          <section className="fixed bottom-0 left-1/2 z-[51] w-full max-w-[420px] -translate-x-1/2 rounded-t-[26px] bg-[var(--color-surface)] p-4 shadow-2xl md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:max-w-md md:rounded-[26px] md:p-6">
+          <section className="fixed bottom-0 left-1/2 z-[51] w-full max-w-[420px] -translate-x-1/2 rounded-t-[26px] bg-[var(--color-surface)] p-5 shadow-2xl md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:max-w-md md:rounded-[26px] md:p-6">
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[var(--color-border)] md:hidden" />
-            <h2 className="text-[14px] font-bold text-[var(--color-primary)] md:text-[16px]">Hòm thư hoạt động thế nào?</h2>
-            <p className="mt-2 text-[10px] leading-5 text-[var(--color-text-secondary)] md:text-[13px] md:leading-6">
+            <div className="flex items-center gap-3">
+              <MochiThinkingCompanion className="h-12 w-12 shrink-0" />
+              <h2 className="text-[15px] font-bold text-[var(--color-primary)] md:text-[16px]">
+                Hòm thư hoạt động thế nào?
+              </h2>
+            </div>
+            <p className="mt-2.5 text-[12.5px] leading-6 text-[var(--color-text-secondary)] md:text-[13px]">
               Thư ẩn danh đi vào một hòm thư chung có kiểm duyệt, không gửi hàng loạt đến mọi
               người. Người đọc có thể mở, bỏ qua, ẩn hoặc hồi đáp riêng. Tên thật được ẩn với
               cộng đồng nhưng không tuyệt đối ẩn với hệ thống an toàn.
             </p>
-            <button onClick={() => setShowMailboxInfo(false)} className="mt-4 min-h-11 w-full rounded-full border border-[#B8CCB6] text-[11px] font-bold text-[var(--color-primary)] md:text-[13px]" type="button">
+            <button onClick={() => setShowMailboxInfo(false)} className="mt-4 min-h-11 w-full rounded-full border border-[#B8CCB6] text-[13px] font-bold text-[var(--color-primary)] cursor-pointer" type="button">
               Đã hiểu
             </button>
           </section>
@@ -2327,7 +3003,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
                     setSelectedLetter((letter) => ({ ...letter, repliesAllowed: !letter.repliesAllowed }));
                     setShowLetterMenu(false);
                   }}
-                  className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-[11px] font-semibold text-[var(--color-text-secondary)] hover:bg-[var(--color-chart-background)]"
+                  className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-[13px] font-semibold text-[var(--color-text-secondary)] hover:bg-[var(--color-chart-background)]"
                   type="button"
                 >
                   <span className="material-symbols-outlined text-[19px]">comments_disabled</span>
@@ -2342,7 +3018,7 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
                     setHistory([]);
                     setRoute('feed');
                   }}
-                  className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-[11px] font-semibold text-[#A64D42] hover:bg-[#FFF0EA]"
+                  className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-[13px] font-semibold text-[#A64D42] hover:bg-[#FFF0EA]"
                   type="button"
                 >
                   <span className="material-symbols-outlined text-[19px]">delete</span>
@@ -2359,19 +3035,21 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
                     setRoute('feed');
                     showToast('Đã ẩn lá thư khỏi hòm thư của bạn.');
                   }}
-                  className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-[11px] font-semibold text-[var(--color-text-secondary)] hover:bg-[var(--color-chart-background)]"
+                  className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-[13px] font-semibold text-[var(--color-text-secondary)] hover:bg-[var(--color-chart-background)]"
                   type="button"
                 >
                   <span className="material-symbols-outlined text-[19px]">visibility_off</span>
                   Ẩn lá thư
                 </button>
-                <button onClick={() => { setShowLetterMenu(false); showToast('Đã mở quy trình báo cáo an toàn.'); }} className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-[11px] font-semibold text-[#A64D42] hover:bg-[#FFF0EA]" type="button">
+                <button onClick={() => { setShowLetterMenu(false); showToast('Tính năng báo cáo chưa khả dụng trong phiên bản này. Bạn có thể ẩn lá thư khỏi thiết bị.'); }} className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-[13px] font-semibold text-[#A64D42] hover:bg-[#FFF0EA]" type="button">
                   <span className="material-symbols-outlined text-[19px]">flag</span>
-                  Báo cáo thư
+                  Báo cáo thư (chưa khả dụng)
                 </button>
-                <button onClick={() => { setShowLetterMenu(false); showToast(`Bạn sẽ không nhận thêm thư chủ đề ${selectedLetter.topic}.`); }} className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-[11px] font-semibold text-[#A64D42] hover:bg-[#FFF0EA]" type="button">
+                <button onClick={() => setCommunityTopicBlocked(selectedLetter.topic, !blockedCommunityTopics.includes(selectedLetter.topic))} className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-[13px] font-semibold text-[#A64D42] hover:bg-[#FFF0EA]" type="button">
                   <span className="material-symbols-outlined text-[19px]">do_not_disturb_on</span>
-                  Không nhận thư từ chủ đề này
+                  {blockedCommunityTopics.includes(selectedLetter.topic)
+                    ? `Nhận lại thư chủ đề ${selectedLetter.topic}`
+                    : `Không nhận thư chủ đề ${selectedLetter.topic}`}
                 </button>
               </>
             )}
@@ -2384,28 +3062,30 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
           <button onClick={() => setShowConversationMenu(false)} aria-label="Đóng tùy chọn cuộc trò chuyện" className="fixed inset-0 z-50 bg-[var(--color-text-primary)]/20" type="button" />
           <section className="fixed bottom-0 left-1/2 z-[51] w-full max-w-[420px] -translate-x-1/2 rounded-t-[26px] bg-[var(--color-surface)] p-4 shadow-2xl md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:max-w-md md:rounded-[26px] md:p-6">
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[var(--color-border)] md:hidden" />
-            <h2 className="mb-3 text-[14px] font-bold text-[var(--color-primary)] md:text-[16px]">Quyền kiểm soát cuộc trò chuyện</h2>
-            {[
-              { icon: 'notifications_off', label: receivingMessages ? 'Dừng nhận lời nhắn' : 'Cho phép nhận lại' },
-              { icon: 'block', label: 'Chặn người này' },
-              { icon: 'flag', label: 'Báo cáo cuộc trò chuyện' },
-            ].map((item, index) => (
+            <h2 className="mb-3 text-[14px] font-bold text-[var(--color-primary)] md:text-[16px]">Tùy chọn bản nháp trên thiết bị</h2>
+            {selectedContact && (
               <button
-                key={item.label}
-                onClick={() => {
-                  if (index === 0) setReceivingMessages((current) => !current);
-                  setShowConversationMenu(false);
-                  showToast(index === 0 ? 'Đã cập nhật quyền nhận lời nhắn.' : 'Đã mở quy trình an toàn.');
-                }}
-                className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-[11px] font-semibold ${
-                  index > 0 ? 'text-[#A64D42] hover:bg-[#FFF0EA]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-chart-background)]'
-                }`}
+                onClick={() => togglePrivateContactBlock(selectedContact)}
+                className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-[13px] font-semibold text-[#A64D42] hover:bg-[#FFF0EA]"
                 type="button"
               >
-                <span className="material-symbols-outlined text-[19px]">{item.icon}</span>
-                {item.label}
+                <span className="material-symbols-outlined text-[19px]">block</span>
+                {blockedPrivateContactIds.includes(selectedContact.id)
+                  ? 'Bỏ chặn trên thiết bị'
+                  : 'Chặn người này trên thiết bị'}
               </button>
-            ))}
+            )}
+            <button
+              onClick={() => {
+                setShowConversationMenu(false);
+                showToast('Tính năng báo cáo chưa khả dụng trong phiên bản này.');
+              }}
+              className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-[13px] font-semibold text-[#A64D42] hover:bg-[#FFF0EA]"
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[19px]">flag</span>
+              Báo cáo cuộc trò chuyện (chưa khả dụng)
+            </button>
           </section>
         </>
       )}
@@ -2413,22 +3093,115 @@ export const SharingFlowScreen: React.FC<SharingFlowScreenProps> = ({
       {showSendConfirm && (
         <>
           <div className="fixed inset-0 z-50 bg-[var(--color-text-primary)]/25 backdrop-blur-[1px]" />
-          <section role="dialog" aria-modal="true" aria-label="Xác nhận gửi lời nhắn riêng" className="fixed left-1/2 top-1/2 z-[51] w-[calc(100%-32px)] max-w-[370px] -translate-x-1/2 -translate-y-1/2 rounded-[24px] bg-[var(--color-surface)] p-5 shadow-2xl">
-            <h2 className="text-[15px] font-bold text-[var(--color-primary)]">Gửi lời nhắn cho {selectedContact?.name}?</h2>
-            <div className="mt-3 max-h-28 overflow-y-auto rounded-2xl bg-[var(--color-chart-background)] p-3 text-[10.5px] leading-5 text-[var(--color-text-secondary)]">{privateText}</div>
-            <p className="mt-3 text-[9.5px] leading-4 text-[var(--color-text-secondary)]">
-              Đây là lời nhắn riêng, không được đăng lên cộng đồng.
+          <section role="dialog" aria-modal="true" aria-label="Xác nhận lưu bản nháp riêng" className="fixed left-1/2 top-1/2 z-[51] w-[calc(100%-32px)] max-w-[380px] -translate-x-1/2 -translate-y-1/2 rounded-[24px] bg-[var(--color-surface)] p-5 shadow-2xl">
+            <h2 className="text-[16px] font-bold text-[var(--color-primary)]">Lưu bản nháp cho {selectedContact?.name}?</h2>
+            <div className="mt-3 max-h-28 overflow-y-auto rounded-2xl bg-[var(--color-chart-background)] p-3 text-[12.5px] leading-5 text-[var(--color-text-secondary)]">{privateText}</div>
+            <p className="mt-3 text-[11.5px] leading-5 text-[var(--color-text-secondary)]">
+              Bản nháp chỉ lưu trên thiết bị, chưa gửi đến người nhận. Hệ thống không nhận hoặc lưu bản này trên máy chủ.
             </p>
             <div className="mt-5 grid grid-cols-2 gap-2">
-              <button onClick={() => setShowSendConfirm(false)} disabled={isSending} className="min-h-11 rounded-full border border-[var(--color-border)] text-[11px] font-bold text-[var(--color-text-secondary)]" type="button">
+              <button onClick={() => setShowSendConfirm(false)} disabled={isSending} className="min-h-11 rounded-full border border-[var(--color-border)] text-[12.5px] font-bold text-[var(--color-text-secondary)] cursor-pointer" type="button">
                 Sửa lại
               </button>
-              <button onClick={sendPrivateMessage} disabled={isSending} className="min-h-11 rounded-full bg-[var(--color-primary)] text-[11px] font-bold text-white" type="button">
-                {isSending ? 'Đang gửi...' : 'Xác nhận gửi'}
+              <button onClick={savePrivateMessageDraft} disabled={isSending || !selectedContact || isSelectedContactBlocked} className="min-h-11 rounded-full bg-[var(--color-primary)] text-[12.5px] font-bold text-white cursor-pointer" type="button">
+                {isSending ? 'Đang lưu...' : 'Lưu bản nháp'}
               </button>
             </div>
           </section>
         </>
+      )}
+      {moderationModal && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-[#173E30]/45 p-4 backdrop-blur-xs animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Thông điệp an toàn từ Mochi"
+        >
+          <section className="w-full max-w-[440px] rounded-[28px] border border-[#DCE6D5] bg-[#FFFCF7] p-6 shadow-2xl space-y-4">
+            <div className="flex items-start gap-3">
+              <div
+                className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border ${
+                  moderationModal.decision === 'SELF_HARM_INTERCEPT'
+                    ? 'bg-[#E7F1DF] border-[#C5DEC0]'
+                    : 'bg-[#FFF0E1] border-[#EDD2B6]'
+                }`}
+              >
+                {moderationModal.decision === 'SELF_HARM_INTERCEPT' ? (
+                  <MochiHappyCompanion className="w-12 h-12" />
+                ) : (
+                  <MochiThinkingCompanion className="w-12 h-12" />
+                )}
+              </div>
+              <div>
+                <h3 className="text-[16px] font-bold text-[#1F5C43]">
+                  {moderationModal.decision === 'SELF_HARM_INTERCEPT'
+                    ? moderationModal.source === 'private_message'
+                      ? 'Nhắc nhở an toàn từ Mochi — Bản nháp chưa được gửi'
+                      : 'Thiệp vỗ về từ Mochi — Lá thư được giữ riêng tư cho bạn'
+                    : 'Nhắc nhở tử tế từ Góc Sẻ Chia'}
+                </h3>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-[#4E5E52]">
+                  {moderationModal.message}
+                </p>
+              </div>
+            </div>
+
+            {moderationModal.decision === 'SELF_HARM_INTERCEPT' ? (
+              <div className="space-y-2.5 pt-1">
+                {onOpenCrisisSupport && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModerationModal(null);
+                      onOpenCrisisSupport();
+                    }}
+                    className="w-full min-h-[48px] rounded-full bg-[#1F5C43] text-white text-[13.5px] font-bold flex items-center justify-center gap-2 shadow-sm hover:brightness-105 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[19px]">
+                      shield_with_heart
+                    </span>
+                    <span>Mở Phao An Toàn &amp; Điểm Tựa Khẩn Cấp (WHO PFA)</span>
+                  </button>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <a
+                    href="tel:0963061414"
+                    className="min-h-[42px] rounded-full border border-[#DCE5D5] bg-[#FAF7EE] text-[#1F5C43] text-[12px] font-bold flex items-center justify-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">call</span>
+                    <span>096 306 1414</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const fromPrivate = moderationModal.source === 'private_message';
+                      setModerationModal(null);
+                      if (!fromPrivate) {
+                        setMailboxTab('mine');
+                        setPaperMailboxView('mine');
+                        setHistory([]);
+                        setRoute('feed');
+                      }
+                    }}
+                    className="min-h-[42px] rounded-full border border-[#E7E8DE] bg-white text-[#756455] text-[12px] font-semibold cursor-pointer"
+                  >
+                    {moderationModal.source === 'private_message'
+                      ? 'Ở lại trang này'
+                      : 'Xem thư riêng tư'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setModerationModal(null)}
+                className="w-full min-h-[46px] rounded-full bg-[#1F5C43] text-white text-[13.5px] font-bold hover:brightness-105 active:scale-95 transition-all cursor-pointer"
+              >
+                Mình hiểu rồi — Chỉnh sửa lại lời nhắn
+              </button>
+            )}
+          </section>
+        </div>
       )}
     </div>
   );

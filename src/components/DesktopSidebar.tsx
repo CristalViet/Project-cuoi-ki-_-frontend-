@@ -1,5 +1,5 @@
 import React from 'react';
-import { MainTab, SubScreen } from '../types';
+import { HealthStatusDTO, MainTab, RiskTier, SubScreen } from '../types';
 import { MindCareBrandLogo } from './MochiIllustrations';
 
 interface DesktopSidebarProps {
@@ -7,21 +7,52 @@ interface DesktopSidebarProps {
   subScreen: SubScreen;
   currentStreak: number;
   collapsed: boolean;
+  currentRiskTier?: RiskTier;
+  healthStatus?: HealthStatusDTO;
   onToggleCollapse: () => void;
   onSelectTab: (tab: MainTab) => void;
   onOpenSubScreen: (sub: SubScreen) => void;
   onQuickAdd: () => void;
+  onOpenCrisisDrawer?: () => void;
+  onOpenCounselorTriage?: () => void;
 }
+
+const SIDEBAR_TIER_STYLE: Record<RiskTier, { badgeCls: string; dotCls: string }> = {
+  L0: {
+    badgeCls: 'bg-[#E7F1DF] text-[#1F5C43] border-[#C8DEC1]',
+    dotCls: 'bg-[#10B981]',
+  },
+  L1: {
+    badgeCls: 'bg-[#E7F1DF] text-[#1F5C43] border-[#C8DEC1]',
+    dotCls: 'bg-[#10B981]',
+  },
+  L2: {
+    badgeCls: 'bg-[#FFF8EF] text-[#A7683F] border-[#EBD4B9]',
+    dotCls: 'bg-[#E78A45]',
+  },
+  L3: {
+    badgeCls: 'bg-[#FFF0E1] text-[#9E472A] border-[#ECC5A8]',
+    dotCls: 'bg-[#E26D4D]',
+  },
+  L4: {
+    badgeCls: 'bg-[#FFE7DC] text-[#9E3B1E] border-[#EAB59E]',
+    dotCls: 'bg-[#D94E28]',
+  },
+};
 
 export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
   activeTab,
   subScreen,
   currentStreak,
   collapsed,
+  currentRiskTier = 'L0',
+  healthStatus,
   onToggleCollapse,
   onSelectTab,
   onOpenSubScreen,
   onQuickAdd,
+  onOpenCrisisDrawer,
+  onOpenCounselorTriage,
 }) => {
   const isTabActive = (tab: MainTab) =>
     activeTab === tab &&
@@ -231,6 +262,109 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
             </button>
           );
         })}
+
+        {/* AI Safety & Protection Section */}
+        <div className="my-3 h-px bg-[var(--color-border)]/70" />
+
+        {!collapsed ? (
+          <div className="space-y-1.5 pt-0.5">
+            <p className="px-2.5 pb-0.5 text-[10.5px] font-bold uppercase tracking-wider text-[var(--color-text-secondary)]/80">
+              Bảo vệ &amp; An toàn AI
+            </p>
+
+            {/* Compact Engine & Tier Status Card */}
+            <div className="flex items-center justify-between gap-2 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-warm)] px-3 py-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <span
+                  className={`h-2 w-2 rounded-full shrink-0 ${
+                    healthStatus?.online ? 'bg-[#10B981]' : 'bg-[#F59E0B]'
+                  }`}
+                />
+                <span className="truncate text-[11.5px] font-semibold text-[var(--color-text-primary)]">
+                  {healthStatus?.online
+                    ? healthStatus.geminiConfigured
+                      ? 'Gemini Ready'
+                      : 'Safety Online'
+                    : 'PWA Safe-Mode'}
+                </span>
+              </div>
+              <span
+                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-bold shrink-0 ${SIDEBAR_TIER_STYLE[currentRiskTier].badgeCls}`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${SIDEBAR_TIER_STYLE[currentRiskTier].dotCls}`} />
+                {currentRiskTier}
+              </span>
+            </div>
+
+            {onOpenCrisisDrawer && (
+              <button
+                onClick={onOpenCrisisDrawer}
+                type="button"
+                className="flex w-full items-center gap-2.5 rounded-2xl border border-[#F2D5B8] bg-[#FFF0E1] px-3 py-2.5 text-left text-[#A7683F] transition hover:bg-[#FFE6CE] active:scale-[0.99] cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px] text-[#E78A45] shrink-0">
+                  health_and_safety
+                </span>
+                <span className="truncate text-[12.5px] font-bold">
+                  Phao An Toàn (WHO PFA)
+                </span>
+              </button>
+            )}
+
+            {onOpenCounselorTriage && (
+              <button
+                onClick={onOpenCounselorTriage}
+                type="button"
+                className="flex w-full items-center gap-2.5 rounded-2xl border border-[var(--color-border)] bg-white/85 px-3 py-2 text-left text-[var(--color-primary)] transition hover:bg-[var(--color-surface-mint)]/65 active:scale-[0.99] cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[19px] text-[var(--color-primary)] shrink-0">
+                  clinical_notes
+                </span>
+                <span className="truncate text-[12.5px] font-semibold">
+                  Cổng Chuyên Gia (HITL)
+                </span>
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-1.5 pt-0.5 flex flex-col items-center">
+            <div
+              title={`${healthStatus?.online ? 'AI Safety Online' : 'PWA Safe-Mode'} · Tầng ${currentRiskTier}`}
+              className={`flex h-7 px-2 items-center justify-center gap-1 rounded-full border text-[10px] font-bold ${SIDEBAR_TIER_STYLE[currentRiskTier].badgeCls}`}
+            >
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  healthStatus?.online ? 'bg-[#10B981]' : 'bg-[#F59E0B]'
+                }`}
+              />
+              <span>{currentRiskTier}</span>
+            </div>
+
+            {onOpenCrisisDrawer && (
+              <button
+                onClick={onOpenCrisisDrawer}
+                type="button"
+                title="Phao An Toàn (WHO PFA)"
+                aria-label="Phao An Toàn (WHO PFA)"
+                className="flex h-11 w-full items-center justify-center rounded-2xl border border-[#F2D5B8] bg-[#FFF0E1] text-[#E78A45] transition hover:bg-[#FFE6CE] cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">health_and_safety</span>
+              </button>
+            )}
+
+            {onOpenCounselorTriage && (
+              <button
+                onClick={onOpenCounselorTriage}
+                type="button"
+                title="Cổng Chuyên Gia (HITL)"
+                aria-label="Cổng Chuyên Gia (HITL)"
+                className="flex h-11 w-full items-center justify-center rounded-2xl border border-[var(--color-border)] bg-white/85 text-[var(--color-primary)] transition hover:bg-[var(--color-surface-mint)]/65 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">clinical_notes</span>
+              </button>
+            )}
+          </div>
+        )}
       </nav>
 
       {/* Bottom Settings & Profile */}

@@ -181,6 +181,7 @@ export const INITIAL_CONTACTS: TrustedContact[] = [
     permissionScope: 'Chỉ nhận tín hiệu khi bạn chủ động bấm Yêu cầu hỗ trợ.',
     onlyOnSos: true,
     shareLocation: false,
+    allowAutoCrisisSos: true,
     neverShareJournal: true,
   },
   {
@@ -193,6 +194,7 @@ export const INITIAL_CONTACTS: TrustedContact[] = [
     permissionScope: 'Lời mời nhận liên lạc an toàn đã gửi qua tin nhắn SMS vào hôm qua.',
     onlyOnSos: true,
     shareLocation: false,
+    allowAutoCrisisSos: false,
     neverShareJournal: true,
   },
 ];
@@ -263,6 +265,27 @@ export const INITIAL_CHAT_MESSAGES: ChatMessage[] = [
     sender: 'assistant',
     text: 'Nghe bạn chia sẻ, mình cảm nhận được bạn đang rất cố gắng và đặt nhiều kỳ vọng vào bản thân. Hay mình cùng thử chia nhỏ công việc thành những bước vừa sức, và sắp xếp lại kế hoạch nhé? 💪',
     time: '14:26',
+    isInsightCard: true,
+    insightData: {
+      stressScore: '4/10',
+      stressDelta: '-1.5 so với đầu tuần',
+      earlyWeekStress: '6/10',
+      avgSleep: '7.4h',
+      sleepStatus: 'Đủ giấc phục hồi',
+      sleepGoal: '7.5h/đêm',
+      dailyStress: [
+        { day: 'T2', val: 6 },
+        { day: 'T3', val: 5 },
+        { day: 'T4', val: 6 },
+        { day: 'T5', val: 5 },
+        { day: 'T6', val: 4 },
+        { day: 'T7', val: 5 },
+        { day: 'CN', val: 4 },
+      ],
+      referenceTitle: 'Cẩm nang WHO & Kỹ thuật Chia nhỏ hành động (CBT)',
+      referenceSnippet:
+        'Khi áp lực đồ án tạo cảm giác quá tải, não bộ dễ rơi vào tê liệt quyết định. Hãy chia nhiệm vụ thành phiên 25 phút vừa sức và ghi nhận từng bước hoàn thành nhỏ.',
+    },
   },
 ];
 

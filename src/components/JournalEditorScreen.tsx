@@ -1,13 +1,24 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { JournalEntry } from '../types';
+import { estimateVietnameseSentiment } from '../services/apiClient';
 
 interface JournalEditorProps {
   initialEntry?: JournalEntry | null;
-  onSave: (entry: Partial<JournalEntry>) => void;
+  defaultAllowAiRef?: boolean;
+  onSave: (entry: Partial<JournalEntry>) => Promise<void> | void;
+  onDelete?: (journalId: string) => void;
   onClose: () => void;
 }
 
-type SaveState = 'saved' | 'saving';
+type SaveState = 'saved' | 'saving' | 'error';
+
+interface JournalDraft {
+  title: string;
+  content: string;
+  selectedEmotions: string[];
+  allowAiRef: boolean;
+  imageUrl: string;
+}
 
 const EMOTIONS = [
   { label: 'Nhẹ nhõm', score: 6, icon: 'air' },
@@ -88,7 +99,9 @@ const formatDate = (date: Date) =>
 
 export const JournalEditorScreen: React.FC<JournalEditorProps> = ({
   initialEntry,
+  defaultAllowAiRef = false,
   onSave,
+  onDelete,
   onClose,
 }) => {
   const draftKey = `mindcare_journal_draft_${initialEntry?.id || 'new'}`;
@@ -117,8 +130,9 @@ export const JournalEditorScreen: React.FC<JournalEditorProps> = ({
       (initialEntry?.tag ? [initialEntry.tag] : ['Nhẹ nhõm', 'Hơi lo lắng'])
   );
   const [allowAiRef, setAllowAiRef] = useState(
-    initialDraft?.allowAiRef ?? initialEntry?.allowAiRef ?? false
+    initialDraft?.allowAiRef ?? initialEntry?.allowAiRef ?? defaultAllowAiRef
   );
+  const [isSubmittingSave, setIsSubmittingSave] = useState(false);
   const [imageUrl, setImageUrl] = useState(
     initialDraft?.imageUrl ?? initialEntry?.imageUrl ?? ''
   );
@@ -128,6 +142,7 @@ export const JournalEditorScreen: React.FC<JournalEditorProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [showEmotionPicker, setShowEmotionPicker] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showPromptHelper, setShowPromptHelper] = useState(() => {
     return !initialEntry?.content && !initialDraft?.content;
   });
@@ -136,6 +151,16 @@ export const JournalEditorScreen: React.FC<JournalEditorProps> = ({
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
+
+  const latestDraftRef = useRef<JournalDraft>({
+    title,
+    content,
+    selectedEmotions,
+    allowAiRef,
+    imageUrl,
+  });
+  latestDraftRef.current = { title, content, selectedEmotions, allowAiRef, imageUrl };
+  const skipDraftPersistenceRef = useRef(false);
 
   const currentPrompt = WRITING_PROMPTS[activePromptIndex % WRITING_PROMPTS.length];
 
@@ -167,32 +192,68 @@ export const JournalEditorScreen: React.FC<JournalEditorProps> = ({
   };
 
   const charCount = content.length + title.length;
+  const wordCount = useMemo(() => {
+    const combined = `${title} ${content}`.trim();
+    return combined ? combined.split(/\s+/).length : 0;
+  }, [title, content]);
+
   const canSave = Boolean(title.trim() || content.trim());
   const primaryEmotion =
     EMOTIONS.find((emotion) => selectedEmotions.includes(emotion.label)) || EMOTIONS[0];
   const moodScore = primaryEmotion.score;
-  const aiLabel =
-    moodScore >= 8
-      ? 'Tích cực'
-      : moodScore >= 6
-        ? 'Tích cực nhẹ'
-        : moodScore >= 4
-          ? 'Đang cân bằng'
-          : 'Cần được nghỉ ngơi';
+  const liveSentiment = useMemo(
+    () => estimateVietnameseSentiment(`${title} ${content}`, moodScore),
+    [title, content, moodScore]
+  );
+
+  const persistDraft = (draft: JournalDraft, updateUi = true): boolean => {
+    if (skipDraftPersistenceRef.current) return true;
+
+    try {
+      localStorage.setItem(draftKey, JSON.stringify(draft));
+      if (updateUi) {
+        setLastSavedTime(formatTime());
+        setSaveState('saved');
+      }
+      return true;
+    } catch {
+      if (updateUi) setSaveState('error');
+      return false;
+    }
+  };
+
+  const flushLatestDraft = () => persistDraft(latestDraftRef.current, false);
+
+  const clearDraft = () => {
+    skipDraftPersistenceRef.current = true;
+    try {
+      localStorage.removeItem(draftKey);
+    } catch {
+      setHelperMessage('Không thể xóa bản nháp trên thiết bị.');
+    }
+  };
 
   useEffect(() => {
     setSaveState('saving');
     const timer = window.setTimeout(() => {
-      localStorage.setItem(
-        draftKey,
-        JSON.stringify({ title, content, selectedEmotions, allowAiRef, imageUrl })
-      );
-      setLastSavedTime(formatTime());
-      setSaveState('saved');
+      persistDraft({ title, content, selectedEmotions, allowAiRef, imageUrl });
     }, 700);
 
     return () => window.clearTimeout(timer);
   }, [allowAiRef, content, draftKey, imageUrl, selectedEmotions, title]);
+
+  useEffect(() => {
+    const saveBeforePageExit = () => {
+      flushLatestDraft();
+    };
+
+    window.addEventListener('pagehide', saveBeforePageExit);
+    window.addEventListener('beforeunload', saveBeforePageExit);
+    return () => {
+      window.removeEventListener('pagehide', saveBeforePageExit);
+      window.removeEventListener('beforeunload', saveBeforePageExit);
+    };
+  }, [draftKey]);
 
   useEffect(() => {
     if (!helperMessage) return;
@@ -289,34 +350,52 @@ export const JournalEditorScreen: React.FC<JournalEditorProps> = ({
     setHelperMessage('Đang lắng nghe, chạm lại biểu tượng micro để dừng.');
   };
 
-  const handleSave = () => {
-    if (!canSave) {
+  const handleSave = async () => {
+    if (!canSave || isSubmittingSave) {
       contentRef.current?.focus();
       setHelperMessage('Hãy viết ít nhất một dòng trước khi lưu nhật ký.');
       return;
     }
 
-    localStorage.removeItem(draftKey);
-    onSave({
-      id: initialEntry?.id,
-      title: title.trim() || 'Nhật ký không tên',
-      content: content.trim(),
-      tag: primaryEmotion.label,
-      moodScore,
-      aiEstimateLabel: aiLabel,
-      aiEstimateScore: moodScore,
-      aiBarWidth: moodScore * 10,
-      isEncrypted: true,
-      allowAiRef,
-      imageUrl: imageUrl || undefined,
-    });
+    setIsSubmittingSave(true);
+    try {
+      await onSave({
+        id: initialEntry?.id,
+        title: title.trim() || 'Nhật ký không tên',
+        content: content.trim(),
+        tag: primaryEmotion.label,
+        moodScore,
+        aiEstimateLabel: liveSentiment.aiEstimateLabel,
+        aiEstimateScore: liveSentiment.aiEstimateScore,
+        aiBarWidth: liveSentiment.aiBarWidth,
+        isEncrypted: true,
+        allowAiRef,
+        imageUrl: imageUrl || undefined,
+      });
+      clearDraft();
+    } catch {
+      persistDraft(latestDraftRef.current);
+      setHelperMessage('Chưa lưu được nhật ký. Bản nháp vẫn được giữ trên thiết bị.');
+    } finally {
+      setIsSubmittingSave(false);
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (!initialEntry?.id || !onDelete) return;
+    clearDraft();
+    setShowDeleteConfirm(false);
+    onDelete(initialEntry.id);
   };
 
   return (
     <div className="relative flex min-h-[calc(100vh-33px)] md:min-h-screen flex-1 flex-col bg-[var(--color-background)] pb-[68px] md:pb-8 text-[var(--color-text-primary)]">
       <header className="grid grid-cols-[44px_1fr_auto] items-center gap-2 px-3 pb-1 pt-2 md:max-w-[760px] md:mx-auto md:w-full md:px-6 md:pt-5 md:pb-3">
         <button
-          onClick={onClose}
+          onClick={() => {
+            flushLatestDraft();
+            onClose();
+          }}
           aria-label="Đóng trình soạn thảo"
           className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--color-primary)] transition hover:bg-[var(--color-surface-mint)] active:scale-95"
           type="button"
@@ -333,14 +412,28 @@ export const JournalEditorScreen: React.FC<JournalEditorProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={handleSave}
-          disabled={!canSave}
-          className="min-w-[68px] md:min-w-[92px] rounded-full bg-[var(--color-primary)] px-3.5 md:px-5 py-2 text-[12px] md:text-[13px] font-bold text-white transition hover:bg-[var(--color-primary)] active:scale-95 disabled:cursor-not-allowed disabled:bg-[var(--color-text-secondary)]"
-          type="button"
-        >
-          Lưu bài
-        </button>
+        <div className="flex items-center gap-1.5">
+          {initialEntry?.id && onDelete && (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              aria-label="Xóa bài nhật ký này"
+              title="Xóa bài nhật ký này"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#EED6D2] bg-[#FFF5F3] text-[#B44A3E] transition hover:bg-[#FDE8E4] active:scale-95"
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[18px]">delete</span>
+            </button>
+          )}
+
+          <button
+            onClick={handleSave}
+            disabled={!canSave || isSubmittingSave}
+            className="min-w-[68px] md:min-w-[92px] rounded-full bg-[var(--color-primary)] px-3.5 md:px-5 py-2 text-[12px] md:text-[13px] font-bold text-white transition hover:brightness-105 active:scale-95 disabled:cursor-not-allowed disabled:bg-[var(--color-text-secondary)]"
+            type="button"
+          >
+            {isSubmittingSave ? 'Đang lưu...' : 'Lưu bài'}
+          </button>
+        </div>
       </header>
 
       <main className="flex min-h-0 flex-1 flex-col px-4 pb-2 md:max-w-[760px] md:mx-auto md:w-full md:px-6">
@@ -500,7 +593,12 @@ export const JournalEditorScreen: React.FC<JournalEditorProps> = ({
 
           {imageUrl && (
             <div className="relative mx-3.5 mb-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[#F3F0E8]">
-              <img src={imageUrl} alt="Ảnh kỷ niệm đính kèm" className="max-h-40 w-full object-cover" />
+              <img
+                src={imageUrl}
+                alt="Ảnh kỷ niệm đính kèm"
+                onError={() => setImageUrl('')}
+                className="max-h-40 w-full object-cover"
+              />
               <button
                 onClick={() => setImageUrl('')}
                 aria-label="Xóa ảnh đính kèm"
@@ -512,18 +610,26 @@ export const JournalEditorScreen: React.FC<JournalEditorProps> = ({
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-2 px-3.5 pb-3 text-[9.5px] font-medium text-[var(--color-text-secondary)]">
+          <div className="flex items-center justify-between gap-2 px-3.5 md:px-6 pb-3 text-[10px] font-medium text-[var(--color-text-secondary)]">
             <div className="flex items-center gap-1.5" aria-live="polite">
               <span
                 className={`h-1.5 w-1.5 rounded-full ${
-                  saveState === 'saving' ? 'animate-pulse bg-[#D49A55]' : 'bg-[var(--color-secondary)]'
+                  saveState === 'saving'
+                    ? 'animate-pulse bg-[#D49A55]'
+                    : 'bg-[var(--color-secondary)]'
                 }`}
               />
               <span>
-                {saveState === 'saving' ? 'Đang lưu...' : `Đã lưu nháp lúc ${lastSavedTime}`}
+                {saveState === 'saving'
+                  ? 'Đang lưu...'
+                  : saveState === 'error'
+                    ? 'Không lưu được nháp trên thiết bị'
+                    : `Đã lưu nháp lúc ${lastSavedTime}`}
               </span>
             </div>
-            <span>{charCount} ký tự</span>
+            <span className="tabular-nums">
+              {wordCount} từ · {charCount} ký tự
+            </span>
           </div>
         </section>
       </main>
@@ -564,15 +670,15 @@ export const JournalEditorScreen: React.FC<JournalEditorProps> = ({
 
             <div className="mb-3 rounded-2xl bg-[var(--color-chart-background)] p-3">
               <div className="flex items-center justify-between text-[11px]">
-                <span className="font-bold text-[var(--color-primary)]">Cảm xúc ước lượng</span>
+                <span className="font-bold text-[var(--color-primary)]">Cảm xúc ước lượng (NLP)</span>
                 <span className="font-bold text-[var(--color-primary)]">
-                  {aiLabel} · {moodScore}/10
+                  {liveSentiment.aiEstimateLabel} · {liveSentiment.aiEstimateScore}/10
                 </span>
               </div>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--color-border)]">
                 <div
-                  className="h-full rounded-full bg-[var(--color-secondary)]"
-                  style={{ width: `${moodScore * 10}%` }}
+                  className="h-full rounded-full bg-[var(--color-secondary)] transition-all duration-300"
+                  style={{ width: `${liveSentiment.aiBarWidth}%` }}
                 />
               </div>
             </div>
@@ -599,6 +705,22 @@ export const JournalEditorScreen: React.FC<JournalEditorProps> = ({
               </label>
             </div>
 
+            {initialEntry?.id && onDelete && (
+              <div className="mt-3 border-t border-[#ECEBE3] pt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowOptions(false);
+                    setShowDeleteConfirm(true);
+                  }}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-full border border-[#EED6D2] bg-[#FFF5F3] py-2 text-[12px] font-bold text-[#B44A3E] hover:bg-[#FDE8E4] transition"
+                >
+                  <span className="material-symbols-outlined text-[16px]">delete</span>
+                  <span>Xóa bài nhật ký này</span>
+                </button>
+              </div>
+            )}
+
             <p className="mt-3 border-t border-[#ECEBE3] pt-3 text-[10px] leading-4 text-[var(--color-text-secondary)]">
               Nội dung nhật ký không được gửi cho người thân hay bên thứ ba.
             </p>
@@ -606,9 +728,49 @@ export const JournalEditorScreen: React.FC<JournalEditorProps> = ({
         </>
       )}
 
+      {/* 2-Step Delete Confirmation Modal */}
+      {showDeleteConfirm && initialEntry?.id && onDelete && (
+        <div className="fixed inset-0 z-[75] flex items-center justify-center bg-black/45 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-[368px] rounded-[24px] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-2xl space-y-3.5">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FFF0E1] text-[#B44A3E]">
+                <span className="material-symbols-outlined text-[21px]">delete_forever</span>
+              </span>
+              <div>
+                <h2 className="text-[16px] font-bold text-[var(--color-primary)]">
+                  Xóa bài nhật ký này?
+                </h2>
+                <p className="text-[11px] text-[var(--color-text-secondary)]">
+                  {initialEntry.date}
+                </p>
+              </div>
+            </div>
+            <p className="text-[13px] leading-relaxed text-[var(--color-text-primary)]">
+              Trang viết <strong>“{title || initialEntry.title}”</strong> sẽ được xóa vĩnh viễn và không thể hoàn tác.
+            </p>
+            <div className="flex items-center gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 rounded-full border border-[var(--color-border)] bg-white py-2.5 text-[13px] font-bold text-[var(--color-primary)] hover:bg-[var(--color-surface-mint)] transition"
+              >
+                Giữ lại
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="flex-1 rounded-full bg-[#B44A3E] py-2.5 text-[13px] font-bold text-white shadow-sm hover:brightness-105 active:scale-95 transition"
+              >
+                Xác nhận xóa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <nav
         aria-label="Công cụ soạn thảo"
-        className="fixed bottom-0 left-1/2 z-50 flex w-full max-w-[420px] -translate-x-1/2 items-center justify-between bg-[var(--color-background)]/95 px-3 py-2 backdrop-blur-xl md:sticky md:bottom-4 md:left-auto md:translate-x-0 md:max-w-[712px] md:mx-auto md:rounded-2xl md:border md:border-[var(--color-border)] md:bg-[var(--color-surface)]/95 md:px-4 md:py-2.5 md:shadow-md md:mt-3"
+        className="fixed bottom-0 left-1/2 z-50 flex w-full max-w-[420px] -translate-x-1/2 items-center justify-between bg-[var(--color-background)]/95 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl md:sticky md:bottom-4 md:left-auto md:translate-x-0 md:max-w-[712px] md:mx-auto md:rounded-2xl md:border md:border-[var(--color-border)] md:bg-[var(--color-surface)]/95 md:px-4 md:py-2.5 md:shadow-md md:mt-3"
       >
         <div className="flex items-center gap-0.5">
           <button
